@@ -2,6 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>eXoCooLd.Waveshare.EPaperDisplay</PackageId>
+    <Authors>André Wehrli</Authors>
+    <Product>Waveshare E-Paper Display Library</Product>
+    <Company>Private Project</Company>
+    <Description>Library for .Net Core to control a Waveshare E-Paper Display</Description>
+    <Copyright>André Wehrli</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/eXoCooLd/Waveshare.EPaperDisplay</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/eXoCooLd/Waveshare.EPaperDisplay</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>epaper e-paperdisplay waveshare-eink</PackageTags>
+    <PackageReleaseNotes>Currently only supports the Model: Waveshare 7.5inch e-Paper (B)</PackageReleaseNotes>
+    <AssemblyName>Waveshare.EPaperDisplay</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
