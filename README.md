@@ -28,5 +28,9 @@ public static void Main()
 }
 ```
 
+## Example running on Raspberry Pi 3
+
+![Screenshot](workingWithRaspberryPi.jpg)
+
 ## License
 [MIT](LICENSE)
