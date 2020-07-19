@@ -11,6 +11,10 @@ https://www.waveshare.com/w/upload/2/29/7.5inch_e-paper-b-Specification.pdf
 C Example Code from:
 https://github.com/waveshare/e-Paper/tree/master/RaspberryPi%26JetsonNano/c
 
+## NuGet Package:
+
+https://www.nuget.org/packages/eXoCooLd.Waveshare.EPaperDisplay/
+
 ## Usage for a public static method:
 
 ```C#
