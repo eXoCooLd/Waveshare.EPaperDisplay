@@ -41,7 +41,7 @@ namespace Waveshare.Example
         /// </summary>
         public static void Main()
         {
-            const string fileName = "like_a_sir.bmp";
+            const string fileName = "like_a_sir_640x385.bmp";
             using var bitmap = new Bitmap(Image.FromFile(fileName, true));
 
             using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);

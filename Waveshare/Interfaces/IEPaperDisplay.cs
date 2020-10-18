@@ -57,9 +57,14 @@ namespace Waveshare.Interfaces
         void Sleep();
 
         /// <summary>
-        /// Clear the Display
+        /// Clear the Display to White
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Clear the Display to Black
+        /// </summary>
+        void ClearBlack();
 
         /// <summary>
         /// Reset the Display
