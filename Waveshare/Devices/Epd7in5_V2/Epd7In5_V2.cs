@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2020 Greg Cannon
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,14 +32,14 @@ using Waveshare.Common;
 
 #endregion Usings
 
-namespace Waveshare.Devices.Epd7in5bc
+namespace Waveshare.Devices.Epd7in5_V2
 {
     /// <summary>
-    /// Type: Waveshare 7.5inch e-Paper (B)
-    /// Color: Black, White and Red
-    /// Display Resolution: 640*385
+    /// Type: Waveshare 7.5inch e-Paper V2
+    /// Color: Black and White
+    /// Display Resolution: 800*480
     /// </summary>
-    internal sealed class Epd7In5Bc : EPaperDisplayBase
+    internal sealed class Epd7In5_V2 : EPaperDisplayBase
     {
 
         //########################################################################################
@@ -49,27 +49,27 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Pixel Width of the Display
         /// </summary>
-        public override int Width { get; } = 640;
+        public override int Width { get; } = 800;
 
         /// <summary>
         /// Pixel Height of the Display
         /// </summary>
-        public override int Height { get; } = 384;
+        public override int Height { get; } = 480;
 
         /// <summary>
         /// Get Status Command
         /// </summary>
-        protected override byte GetStatusCommand { get; } = (byte)Epd7In5BcCommands.GetStatus;
+        protected override byte GetStatusCommand { get; } = (byte)Epd7In5_V2Commands.GetStatus;
 
         /// <summary>
         /// Start Data Transmission Command
         /// </summary>
-        protected override byte StartDataTransmissionCommand { get; } = (byte)Epd7In5BcCommands.DataStartTransmission1;
+        protected override byte StartDataTransmissionCommand { get; } = (byte)Epd7In5_V2Commands.DataStartTransmission2;
 
         /// <summary>
         /// Stop Data Transmission Command
         /// </summary>
-        protected override byte StopDataTransmissionCommand { get; } = (byte)Epd7In5BcCommands.DataStop;
+        protected override byte StopDataTransmissionCommand { get; } = (byte)Epd7In5_V2Commands.DataStop;
 
         #endregion Properties
 
@@ -82,7 +82,8 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void Clear()
         {
-            FillColor(Color.White);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission1, Color.White);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission2, Color.White);
             TurnOnDisplay();
         }
 
@@ -91,7 +92,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void ClearBlack()
         {
-            FillColor(Color.Black);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission2, Color.Black);
             TurnOnDisplay();
         }
 
@@ -100,9 +101,9 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void Sleep()
         {
-            SendCommand(Epd7In5BcCommands.PowerOff);
+            SendCommand(Epd7In5_V2Commands.PowerOff);
             WaitUntilReady();
-            SendCommand(Epd7In5BcCommands.DeepSleep);
+            SendCommand(Epd7In5_V2Commands.DeepSleep);
             SendData(0xA5);
         }
 
@@ -119,42 +120,34 @@ namespace Waveshare.Devices.Epd7in5bc
         {
             Reset();
 
-            SendCommand(Epd7In5BcCommands.PowerSetting); // POWER_SETTING
-            SendData(0x37);
+            SendCommand(Epd7In5_V2Commands.PowerSetting);
+            SendData(0x07); // VGH: 20V
+            SendData(0x07); // VGL: -20V
+            SendData(0x3f); // VDH: 15V
+            SendData(0x3f); // VDL: -15V
+
+            SendCommand(Epd7In5_V2Commands.PowerOn);
+            Thread.Sleep(100);
+            WaitUntilReady();
+
+            SendCommand(Epd7In5_V2Commands.PanelSetting);
+            SendData(0x1F); // KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+            SendCommand(Epd7In5_V2Commands.TconResolution);
+            SendData(0x03); // source 800
+            SendData(0x20);
+            SendData(0x01); // gate 480
+            SendData(0xe0);
+
+            SendCommand(Epd7In5_V2Commands.DualSpi);
             SendData(0x00);
 
-            SendCommand(Epd7In5BcCommands.PanelSetting);
-            SendData(0xCF);
-            SendData(0x08);
+            SendCommand(Epd7In5_V2Commands.VcomAndDataIntervalSetting);
+            SendData(0x10);
+            SendData(0x07);
 
-            SendCommand(Epd7In5BcCommands.PllControl);
-            SendData(0x3A); // PLL:  0-15:0x3C, 15+:0x3A
-
-            SendCommand(Epd7In5BcCommands.VcmDcSetting);
-            SendData(0x28); //all temperature  range
-
-            SendCommand(Epd7In5BcCommands.BoosterSoftStart);
-            SendData(0xc7);
-            SendData(0xcc);
-            SendData(0x15);
-
-            SendCommand(Epd7In5BcCommands.VcomAndDataIntervalSetting);
-            SendData(0x77);
-
-            SendCommand(Epd7In5BcCommands.TconSetting);
+            SendCommand(Epd7In5_V2Commands.TconSetting);
             SendData(0x22);
-
-            SendCommand(Epd7In5BcCommands.SpiFlashControl);
-            SendData(0x00);
-
-            SendCommand(Epd7In5BcCommands.TconResolution);
-            SendData((byte) (Width >> 8)); // source 640
-            SendData((byte) (Width & 0xff));
-            SendData((byte) (Height >> 8)); // gate 384
-            SendData((byte) (Height & 0xff));
-
-            SendCommand(Epd7In5BcCommands.FlashMode);
-            SendData(0x03);
         }
 
         /// <summary>
@@ -162,11 +155,18 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         protected override void TurnOnDisplay()
         {
-            SendCommand(Epd7In5BcCommands.PowerOn);
-            WaitUntilReady();
-            SendCommand(Epd7In5BcCommands.DisplayRefresh);
+            SendCommand(Epd7In5_V2Commands.DisplayRefresh);
             Thread.Sleep(100);
             WaitUntilReady();
+        }
+
+        /// <summary>
+        /// Wait until the display is ready
+        /// </summary>
+        public new void WaitUntilReady()
+        {
+            base.WaitUntilReady();
+            Thread.Sleep(200);
         }
 
         /// <summary>
@@ -176,27 +176,10 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(Color pixel)
         {
-            const byte black = 0x00;
-            const byte gray = 0x02;
-            const byte white = 0x03;
-            const byte red = 0x04;
+            const byte white = 0x00;
+            const byte black = 0x01;
 
-            if (IsMonochrom(pixel))
-            {
-                if (pixel.R <= 85)
-                {
-                    return black;
-                }
-
-                if (pixel.R <= 170)
-                {
-                    return gray;
-                }
-
-                return white;
-            }
-
-            return pixel.R >= 64 ? red : black;
+            return pixel.R >= 128 ? white : black;
         }
 
         #endregion Protected Methods
@@ -212,7 +195,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <returns></returns>
         internal override byte[] BitmapToData(Bitmap image)
         {
-            const int pixelPerByte = 2;
+            const int pixelPerByte = 8;
 
             var imageData = new List<byte>();
 
@@ -220,13 +203,23 @@ namespace Waveshare.Devices.Epd7in5bc
             {
                 for (var x = 0; x < Width; x += pixelPerByte)
                 {
-                    var pixel1 = GetPixel(image, x, y);
-                    var pixel1Data = ColorToByte(pixel1);
+                    var pixel1 = ColorToByte(GetPixel(image, x, y));
 
-                    var pixel2 = GetPixel(image, x + 1, y);
-                    var pixel2Data = ColorToByte(pixel2);
+                    var pixel2 = ColorToByte(GetPixel(image, x + 1, y));
 
-                    var mergedData = MergePixelDataInByte(pixel1Data, pixel2Data);
+                    var pixel3 = ColorToByte(GetPixel(image, x + 2, y));
+
+                    var pixel4 = ColorToByte(GetPixel(image, x + 3, y));
+
+                    var pixel5 = ColorToByte(GetPixel(image, x + 4, y));
+
+                    var pixel6 = ColorToByte(GetPixel(image, x + 5, y));
+
+                    var pixel7 = ColorToByte(GetPixel(image, x + 6, y));
+
+                    var pixel8 = ColorToByte(GetPixel(image, x + 7, y));
+
+                    var mergedData = MergePixelDataInByte(pixel1, pixel2, pixel3, pixel4, pixel5, pixel6, pixel7, pixel8);
                     imageData.Add(mergedData);
                 }
             }
@@ -241,10 +234,10 @@ namespace Waveshare.Devices.Epd7in5bc
         #region Private Methods
 
         /// <summary>
-        /// Helper to send a Command based o the Epd7In5BcCommands Enum
+        /// Helper to send a Command based o the Epd7In5_V2Commands Enum
         /// </summary>
         /// <param name="command">Command to send</param>
-        private void SendCommand(Epd7In5BcCommands command)
+        private void SendCommand(Epd7In5_V2Commands command)
         {
             SendCommand((byte)command);
         }
@@ -252,22 +245,23 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Fill the screen with a color
         /// </summary>
+        /// <param name="command">Start Data Transmission Command</param>
         /// <param name="color">Color to fill the screen</param>
-        private void FillColor(Color color)
+        private void FillColor(Epd7In5_V2Commands command, Color color)
         {
-            const int pixelPerByte = 2;
+            const int pixelPerByte = 8;
             var displayBytes = Width / pixelPerByte * Height;
 
             var pixelData = ColorToByte(color);
-            var twoWhitePixel = MergePixelDataInByte(pixelData, pixelData);
+            var eightColorPixel = MergePixelDataInByte(pixelData, pixelData, pixelData, pixelData, pixelData, pixelData, pixelData, pixelData);
 
-            SendCommand(StartDataTransmissionCommand);
+            SendCommand(command);
             for (var i = 0; i < displayBytes; i++)
             {
-                SendData(twoWhitePixel);
+                SendData(eightColorPixel);
             }
-            SendCommand(StopDataTransmissionCommand);
         }
+
         #endregion Private Methods
 
         //########################################################################################

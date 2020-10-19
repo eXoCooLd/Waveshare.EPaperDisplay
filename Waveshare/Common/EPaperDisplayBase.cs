@@ -173,25 +173,14 @@ namespace Waveshare.Common
         }
 
         /// <summary>
-        /// Clear the Display
+        /// Clear the Display to White
         /// </summary>
-        public void Clear()
-        {
-            const int pixelPerByte = 2;
-            var displayBytes = Width / pixelPerByte * Height;
+        public abstract void Clear();
 
-            var pixelData = ColorToByte(Color.White);
-            var twoWhitePixel = MergePixelDataInByte(pixelData, pixelData);
-
-            SendCommand(StartDataTransmissionCommand);
-            for (var i = 0; i < displayBytes; i++)
-            {
-                SendData(twoWhitePixel);
-            }
-            SendCommand(StopDataTransmissionCommand);
-
-            TurnOnDisplay();
-        }
+        /// <summary>
+        /// Clear the Display to Black
+        /// </summary>
+        public abstract void ClearBlack();
 
         /// <summary>
         /// Send the Display into SleepMode
@@ -280,29 +269,7 @@ namespace Waveshare.Common
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        internal byte[] BitmapToData(Bitmap image)
-        {
-            const int pixelPerByte = 2;
-
-            var imageData = new List<byte>();
-
-            for (var y = 0; y < Height; y++)
-            {
-                for (var x = 0; x < Width; x += pixelPerByte)
-                {
-                    var pixel1 = GetPixel(image, x, y);
-                    var pixel1Data = ColorToByte(pixel1);
-
-                    var pixel2 = GetPixel(image, x + 1, y);
-                    var pixel2Data = ColorToByte(pixel2);
-
-                    var mergedData = MergePixelDataInByte(pixel1Data, pixel2Data);
-                    imageData.Add(mergedData);
-                }
-            }
-
-            return imageData.ToArray();
-        }
+        internal abstract byte[] BitmapToData(Bitmap image);
 
         /// <summary>
         /// Get the Pixel at position x, y or return a white pixel if it is out of bounds
@@ -333,6 +300,24 @@ namespace Waveshare.Common
         {
             var output = (byte) (pixel1 << 4);
             output |= pixel2;
+            return output;
+        }
+
+        /// <summary>
+        /// Merge eight DataBytes into one Byte
+        /// </summary>
+        /// <param name="pixel1"></param>
+        /// <param name="pixel2"></param>
+        /// <param name="pixel3"></param>
+        /// <param name="pixel4"></param>
+        /// <param name="pixel5"></param>
+        /// <param name="pixel6"></param>
+        /// <param name="pixel7"></param>
+        /// <param name="pixel8"></param>
+        /// <returns></returns>
+        internal static byte MergePixelDataInByte(byte pixel1, byte pixel2, byte pixel3, byte pixel4, byte pixel5, byte pixel6, byte pixel7, byte pixel8)
+        {
+            var output = (byte)((pixel1 << 7) | (pixel2 << 6) | (pixel3 << 5) | (pixel4 << 4) | (pixel5 << 3) | (pixel6 << 2) | (pixel7 << 1) | pixel8);
             return output;
         }
 

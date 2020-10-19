@@ -40,6 +40,12 @@ namespace Waveshare.Devices
         /// Color: Black, White and Red
         /// Display Resolution: 640*385
         /// </summary>
-        WaveShare7In5Bc
+        WaveShare7In5Bc,
+        /// <summary>
+        /// Type: Waveshare 7.5inch e-Paper V2
+        /// Color: Black and White
+        /// Display Resolution: 800*480
+        /// </summary>
+        WaveShare7In5_V2
     }
 }
