@@ -1,7 +1,9 @@
 # Waveshare.EPaperDisplay
 Library for .Net Core to control a Waveshare E-Paper Display
 
-Currently only supports the Model: Waveshare 7.5inch e-Paper (B)
+Currently supported Models:
+- Waveshare 7.5inch e-Paper (B)
+- Waveshare 7.5inch e-Paper V2
 
 ## Based on:
 
