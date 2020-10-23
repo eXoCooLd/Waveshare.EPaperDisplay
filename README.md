@@ -9,6 +9,7 @@ Currently supported Models:
 
 Specification from:
 https://www.waveshare.com/w/upload/2/29/7.5inch_e-paper-b-Specification.pdf
+https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
 C Example Code from:
 https://github.com/waveshare/e-Paper/tree/master/RaspberryPi%26JetsonNano/c
