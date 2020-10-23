@@ -183,9 +183,27 @@ namespace Waveshare.Common
         public abstract void ClearBlack();
 
         /// <summary>
+        /// Power the controller on.  Do not use with SleepMode.
+        /// </summary>
+        public abstract void On();
+
+        /// <summary>
+        /// Power the controler off.  Do not use with SleepMode.
+        /// </summary>
+        public abstract void Off();
+
+        /// <summary>
         /// Send the Display into SleepMode
         /// </summary>
         public abstract void Sleep();
+
+        /// <summary>
+        /// Wake the Display from SleepMode
+        /// </summary>
+        public void Wake()
+        {
+            DeviceInitialize();
+        }
 
         #endregion Public Methods
 

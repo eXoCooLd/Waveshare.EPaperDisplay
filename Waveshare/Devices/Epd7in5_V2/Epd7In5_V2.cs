@@ -75,6 +75,20 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         //########################################################################################
 
+        #region Constructor / Dispose / Finalizer
+
+        /// <summary>
+        /// Finalizer
+        /// </summary>
+        ~Epd7In5_V2()
+        {
+            Sleep();
+        }
+
+        #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
         #region Public Methods
 
         /// <summary>
@@ -97,14 +111,40 @@ namespace Waveshare.Devices.Epd7in5_V2
         }
 
         /// <summary>
+        /// Power the controller on.  Do not use with SleepMode.
+        /// </summary>
+        public override void On()
+        {
+            SendCommand(Epd7In5_V2Commands.PowerOn);
+            WaitUntilReady();
+        }
+
+        /// <summary>
+        /// Power the controler off.  Do not use with SleepMode.
+        /// </summary>
+        public override void Off()
+        {
+            SendCommand(Epd7In5_V2Commands.PowerOff);
+            WaitUntilReady();
+        }
+
+        /// <summary>
         /// Send the Display into SleepMode
         /// </summary>
         public override void Sleep()
         {
-            SendCommand(Epd7In5_V2Commands.PowerOff);
-            WaitUntilReady();
+            Off();
             SendCommand(Epd7In5_V2Commands.DeepSleep);
             SendData(0xA5);
+        }
+
+        /// <summary>
+        /// Wait until the display is ready
+        /// </summary>
+        public new void WaitUntilReady()
+        {
+            base.WaitUntilReady();
+            Thread.Sleep(200);
         }
 
         #endregion Public Methods
@@ -120,9 +160,15 @@ namespace Waveshare.Devices.Epd7in5_V2
         {
             Reset();
 
+            SendCommand(Epd7In5_V2Commands.BoosterSoftStart);
+            SendData(0x17);
+            SendData(0x17);
+            SendData(0x27);
+            SendData(0x17);
+
             SendCommand(Epd7In5_V2Commands.PowerSetting);
             SendData(0x07); // VGH: 20V
-            SendData(0x07); // VGL: -20V
+            SendData(0x17); // VGL: -20V
             SendData(0x3f); // VDH: 15V
             SendData(0x3f); // VDL: -15V
 
@@ -158,15 +204,6 @@ namespace Waveshare.Devices.Epd7in5_V2
             SendCommand(Epd7In5_V2Commands.DisplayRefresh);
             Thread.Sleep(100);
             WaitUntilReady();
-        }
-
-        /// <summary>
-        /// Wait until the display is ready
-        /// </summary>
-        public new void WaitUntilReady()
-        {
-            base.WaitUntilReady();
-            Thread.Sleep(200);
         }
 
         /// <summary>
