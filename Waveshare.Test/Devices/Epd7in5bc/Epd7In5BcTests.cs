@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Drawing;
 using System.Linq;
-using Waveshare.Common;
 using Waveshare.Devices.Epd7in5bc;
 using Waveshare.Interfaces;
 
@@ -145,7 +144,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
             const byte white = 0x03;
-            var twoWhitePixel = EPaperDisplayBase.MergePixelDataInByte(white, white);
+            var twoWhitePixel = Epd7In5Bc.MergePixelDataInByte(white, white);
 
             var validBuffer = new List<byte>
             {

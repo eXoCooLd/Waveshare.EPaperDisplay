@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Drawing;
 using System.Linq;
-using Waveshare.Common;
 using Waveshare.Devices.Epd7in5_V2;
 using Waveshare.Interfaces;
 
@@ -184,7 +183,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
             const byte white = 0x00;
-            var eightWhitePixel = EPaperDisplayBase.MergePixelDataInByte(white, white, white, white, white, white, white, white);
+            var eightWhitePixel = Epd7In5_V2.MergePixelDataInByte(white, white, white, white, white, white, white, white);
 
             var validBuffer = new List<byte>
             {
@@ -223,7 +222,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
             const byte black = 0x01;
-            var eightBlackPixel = EPaperDisplayBase.MergePixelDataInByte(black, black, black, black, black, black, black, black);
+            var eightBlackPixel = Epd7In5_V2.MergePixelDataInByte(black, black, black, black, black, black, black, black);
 
             var validBuffer = new List<byte>
             {

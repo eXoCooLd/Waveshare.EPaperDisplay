@@ -251,7 +251,20 @@ namespace Waveshare.Devices.Epd7in5bc
             return imageData.ToArray();
         }
 
-        #endregion
+        /// <summary>
+        /// Merge two DataBytes into one Byte
+        /// </summary>
+        /// <param name="pixel1"></param>
+        /// <param name="pixel2"></param>
+        /// <returns></returns>
+        internal static byte MergePixelDataInByte(byte pixel1, byte pixel2)
+        {
+            var output = (byte)(pixel1 << 4);
+            output |= pixel2;
+            return output;
+        }
+
+        #endregion Internal Methods
 
         //########################################################################################
 

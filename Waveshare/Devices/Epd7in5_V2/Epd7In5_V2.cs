@@ -251,6 +251,24 @@ namespace Waveshare.Devices.Epd7in5_V2
             return imageData.ToArray();
         }
 
+        /// <summary>
+        /// Merge eight DataBytes into one Byte
+        /// </summary>
+        /// <param name="pixel1"></param>
+        /// <param name="pixel2"></param>
+        /// <param name="pixel3"></param>
+        /// <param name="pixel4"></param>
+        /// <param name="pixel5"></param>
+        /// <param name="pixel6"></param>
+        /// <param name="pixel7"></param>
+        /// <param name="pixel8"></param>
+        /// <returns></returns>
+        internal static byte MergePixelDataInByte(byte pixel1, byte pixel2, byte pixel3, byte pixel4, byte pixel5, byte pixel6, byte pixel7, byte pixel8)
+        {
+            var output = (byte)((pixel1 << 7) | (pixel2 << 6) | (pixel3 << 5) | (pixel4 << 4) | (pixel5 << 3) | (pixel6 << 2) | (pixel7 << 1) | pixel8);
+            return output;
+        }
+
         #endregion
 
         //########################################################################################
