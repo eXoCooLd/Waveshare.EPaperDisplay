@@ -75,6 +75,20 @@ namespace Waveshare.Devices.Epd7in5bc
 
         //########################################################################################
 
+        #region Constructor / Dispose / Finalizer
+
+        /// <summary>
+        /// Finalizer
+        /// </summary>
+        ~Epd7In5Bc()
+        {
+            Sleep();
+        }
+
+        #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
         #region Public Methods
 
         /// <summary>
@@ -96,12 +110,29 @@ namespace Waveshare.Devices.Epd7in5bc
         }
 
         /// <summary>
+        /// Power the controller on.  Do not use with SleepMode.
+        /// </summary>
+        public override void On()
+        {
+            SendCommand(Epd7In5BcCommands.PowerOn);
+            WaitUntilReady();
+        }
+
+        /// <summary>
+        /// Power the controler off.  Do not use with SleepMode.
+        /// </summary>
+        public override void Off()
+        {
+            SendCommand(Epd7In5BcCommands.PowerOff);
+            WaitUntilReady();
+        }
+
+        /// <summary>
         /// Send the Display into SleepMode
         /// </summary>
         public override void Sleep()
         {
-            SendCommand(Epd7In5BcCommands.PowerOff);
-            WaitUntilReady();
+            Off();
             SendCommand(Epd7In5BcCommands.DeepSleep);
             SendData(0xA5);
         }

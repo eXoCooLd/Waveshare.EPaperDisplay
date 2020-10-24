@@ -47,14 +47,29 @@ namespace Waveshare.Interfaces
         int Height { get; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Wait until the Display is ready
         /// </summary>
         void WaitUntilReady();
+
+        /// <summary>
+        /// Power the controller on.  Do not use with SleepMode.
+        /// </summary>
+        void On();
+
+        /// <summary>
+        /// Power the controler off.  Do not use with SleepMode.
+        /// </summary>
+        void Off();
 
         /// <summary>
         /// Send the Display into SleepMode
         /// </summary>
         void Sleep();
+
+        /// <summary>
+        /// Wake the Display from SleepMode
+        /// </summary>
+        void Wake();
 
         /// <summary>
         /// Clear the Display to White
