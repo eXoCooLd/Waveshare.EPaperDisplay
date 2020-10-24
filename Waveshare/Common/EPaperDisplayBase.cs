@@ -214,12 +214,12 @@ namespace Waveshare.Common
         /// <summary>
         /// Power the controller on.  Do not use with SleepMode.
         /// </summary>
-        public abstract void On();
+        public abstract void PowerOn();
 
         /// <summary>
         /// Power the controler off.  Do not use with SleepMode.
         /// </summary>
-        public abstract void Off();
+        public abstract void PowerOff();
 
         /// <summary>
         /// Send the Display into SleepMode
@@ -227,9 +227,9 @@ namespace Waveshare.Common
         public abstract void Sleep();
 
         /// <summary>
-        /// Wake the Display from SleepMode
+        /// WakeUp the Display from SleepMode
         /// </summary>
-        public void Wake()
+        public void WakeUp()
         {
             DeviceInitialize();
         }
@@ -294,7 +294,7 @@ namespace Waveshare.Common
         protected abstract void DeviceInitialize();
 
         /// <summary>
-        /// Turn the Display On after a Sleep
+        /// Turn the Display PowerOn after a Sleep
         /// </summary>
         protected abstract void TurnOnDisplay();
 

@@ -112,14 +112,14 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         }
 
         [Test]
-        public void OnTest()
+        public void PowerOnTest()
         {
             using var result = new Epd7In5_V2();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
 
-            result.On();
+            result.PowerOn();
 
             var validBuffer = new List<byte>
             {
@@ -131,14 +131,14 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
 
 
         [Test]
-        public void OffTest()
+        public void PowerOffTest()
         {
             using var result = new Epd7In5_V2();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
 
-            result.Off();
+            result.PowerOff();
 
             var validBuffer = new List<byte>
             {
@@ -147,7 +147,6 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             };
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
-
 
         [Test]
         public void SleepTest()
@@ -292,6 +291,49 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             validBuffer.Add((byte)Epd7In5_V2Commands.DataStop);
             validBuffer.Add((byte)Epd7In5_V2Commands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5_V2Commands.GetStatus);
+
+            Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
+        }
+
+        [Test]
+        public void WakeUpTest()
+        {
+            using var result = new Epd7In5_V2();
+            result.Initialize(m_EPaperDisplayHardwareMock.Object);
+
+            m_DataBuffer.Clear();
+
+            result.WakeUp();
+
+            var validBuffer = new List<byte>
+            {
+                (byte)Epd7In5_V2Commands.BoosterSoftStart,
+                0x17,
+                0x17,
+                0x27,
+                0x17,
+                (byte)Epd7In5_V2Commands.PowerSetting,
+                0x07,
+                0x17,
+                0x3f,
+                0x3f,
+                (byte)Epd7In5_V2Commands.PowerOn,
+                (byte)Epd7In5_V2Commands.GetStatus,
+                (byte)Epd7In5_V2Commands.PanelSetting,
+                0x1F,
+                (byte)Epd7In5_V2Commands.TconResolution,
+                0x03,
+                0x20,
+                0x01,
+                0xe0,
+                (byte)Epd7In5_V2Commands.DualSpi,
+                0x00,
+                (byte)Epd7In5_V2Commands.VcomAndDataIntervalSetting,
+                0x10,
+                0x07,
+                (byte)Epd7In5_V2Commands.TconSetting,
+                0x22
+            };
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }

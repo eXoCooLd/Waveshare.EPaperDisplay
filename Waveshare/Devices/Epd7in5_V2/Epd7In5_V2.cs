@@ -100,7 +100,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Power the controller on.  Do not use with SleepMode.
         /// </summary>
-        public override void On()
+        public override void PowerOn()
         {
             SendCommand(Epd7In5_V2Commands.PowerOn);
             DeviceWaitUntilReady();
@@ -109,7 +109,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Power the controler off.  Do not use with SleepMode.
         /// </summary>
-        public override void Off()
+        public override void PowerOff()
         {
             SendCommand(Epd7In5_V2Commands.PowerOff);
             DeviceWaitUntilReady();
@@ -120,7 +120,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         public override void Sleep()
         {
-            Off();
+            PowerOff();
             SendCommand(Epd7In5_V2Commands.DeepSleep);
             SendData(0xA5);
         }
@@ -184,7 +184,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         }
 
         /// <summary>
-        /// Turn the Display On after a Sleep
+        /// Turn the Display PowerOn after a Sleep
         /// </summary>
         protected override void TurnOnDisplay()
         {

@@ -111,6 +111,43 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         }
 
         [Test]
+        public void PowerOnTest()
+        {
+            using var result = new Epd7In5Bc();
+            result.Initialize(m_EPaperDisplayHardwareMock.Object);
+
+            m_DataBuffer.Clear();
+
+            result.PowerOn();
+
+            var validBuffer = new List<byte>
+            {
+                (byte)Epd7In5BcCommands.PowerOn,
+                (byte)Epd7In5BcCommands.GetStatus
+            };
+            Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
+        }
+
+
+        [Test]
+        public void PowerOffTest()
+        {
+            using var result = new Epd7In5Bc();
+            result.Initialize(m_EPaperDisplayHardwareMock.Object);
+
+            m_DataBuffer.Clear();
+
+            result.PowerOff();
+
+            var validBuffer = new List<byte>
+            {
+                (byte)Epd7In5BcCommands.PowerOff,
+                (byte)Epd7In5BcCommands.GetStatus
+            };
+            Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
+        }
+
+        [Test]
         public void SleepTest()
         {
             using var result = new Epd7In5Bc();
@@ -154,6 +191,40 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             for (int i = 0; i < displayBytes; i++)
             {
                 validBuffer.Add(twoWhitePixel);
+            }
+            validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
+            validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
+            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+            validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
+            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+
+            Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
+        }
+
+        [Test]
+        public void ClearBlackTest()
+        {
+            using var result = new Epd7In5Bc();
+            result.Initialize(m_EPaperDisplayHardwareMock.Object);
+
+            m_DataBuffer.Clear();
+
+            result.ClearBlack();
+
+            const int pixelPerByte = 2;
+            var displayBytes = result.Width / pixelPerByte * result.Height;
+
+            const byte black = 0x00;
+            var twoBlackPixel = Epd7In5Bc.MergePixelDataInByte(black, black);
+
+            var validBuffer = new List<byte>
+            {
+                (byte) Epd7In5BcCommands.DataStartTransmission1
+            };
+
+            for (int i = 0; i < displayBytes; i++)
+            {
+                validBuffer.Add(twoBlackPixel);
             }
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
@@ -220,6 +291,50 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
             validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+
+            Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
+        }
+
+        [Test]
+        public void WakeUpTest()
+        {
+            using var result = new Epd7In5Bc();
+            result.Initialize(m_EPaperDisplayHardwareMock.Object);
+
+            m_DataBuffer.Clear();
+
+            result.WakeUp();
+
+            var validBuffer = new List<byte>
+            {
+                (byte)Epd7In5BcCommands.PowerSetting,
+                0x37,
+                0x00,
+                (byte)Epd7In5BcCommands.PanelSetting,
+                0xCF,
+                0x08,
+                (byte)Epd7In5BcCommands.PllControl,
+                0x3A,
+                (byte)Epd7In5BcCommands.VcmDcSetting,
+                0x28,
+                (byte)Epd7In5BcCommands.BoosterSoftStart,
+                0xc7,
+                0xcc,
+                0x15,
+                (byte)Epd7In5BcCommands.VcomAndDataIntervalSetting,
+                0x77,
+                (byte)Epd7In5BcCommands.TconSetting,
+                0x22,
+                (byte)Epd7In5BcCommands.SpiFlashControl,
+                0x00,
+                (byte)Epd7In5BcCommands.TconResolution,
+                (byte)(result.Width >> 8), // source 640
+                (byte)(result.Width & 0xff),
+                (byte)(result.Height >> 8), // gate 384
+                (byte)(result.Height & 0xff),
+                (byte)Epd7In5BcCommands.FlashMode,
+                0x03
+            };
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }

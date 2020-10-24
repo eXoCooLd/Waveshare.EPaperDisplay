@@ -62,12 +62,12 @@ namespace Waveshare.Interfaces
         /// <summary>
         /// Power the controller on.  Do not use with SleepMode.
         /// </summary>
-        void On();
+        void PowerOn();
 
         /// <summary>
         /// Power the controler off.  Do not use with SleepMode.
         /// </summary>
-        void Off();
+        void PowerOff();
 
         /// <summary>
         /// Send the Display into SleepMode
@@ -75,9 +75,9 @@ namespace Waveshare.Interfaces
         void Sleep();
 
         /// <summary>
-        /// Wake the Display from SleepMode
+        /// WakeUp the Display from SleepMode
         /// </summary>
-        void Wake();
+        void WakeUp();
 
         /// <summary>
         /// Clear the Display to White
