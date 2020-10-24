@@ -39,6 +39,7 @@ namespace Waveshare.Devices.Epd7in5_V2
     /// Color: Black and White
     /// Display Resolution: 800*480
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     internal sealed class Epd7In5_V2 : EPaperDisplayBase
     {
 
@@ -75,20 +76,6 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         //########################################################################################
 
-        #region Constructor / Dispose / Finalizer
-
-        /// <summary>
-        /// Finalizer
-        /// </summary>
-        ~Epd7In5_V2()
-        {
-            Sleep();
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
         #region Public Methods
 
         /// <summary>
@@ -116,7 +103,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         public override void On()
         {
             SendCommand(Epd7In5_V2Commands.PowerOn);
-            WaitUntilReady();
+            DeviceWaitUntilReady();
         }
 
         /// <summary>
@@ -125,7 +112,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         public override void Off()
         {
             SendCommand(Epd7In5_V2Commands.PowerOff);
-            WaitUntilReady();
+            DeviceWaitUntilReady();
         }
 
         /// <summary>
@@ -141,9 +128,9 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Wait until the display is ready
         /// </summary>
-        public new void WaitUntilReady()
+        public void DeviceWaitUntilReady()
         {
-            base.WaitUntilReady();
+            WaitUntilReady();
             Thread.Sleep(200);
         }
 
@@ -174,7 +161,7 @@ namespace Waveshare.Devices.Epd7in5_V2
 
             SendCommand(Epd7In5_V2Commands.PowerOn);
             Thread.Sleep(100);
-            WaitUntilReady();
+            DeviceWaitUntilReady();
 
             SendCommand(Epd7In5_V2Commands.PanelSetting);
             SendData(0x1F); // KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
@@ -203,7 +190,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         {
             SendCommand(Epd7In5_V2Commands.DisplayRefresh);
             Thread.Sleep(100);
-            WaitUntilReady();
+            DeviceWaitUntilReady();
         }
 
         /// <summary>

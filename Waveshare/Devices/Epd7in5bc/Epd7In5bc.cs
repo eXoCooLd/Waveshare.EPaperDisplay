@@ -75,20 +75,6 @@ namespace Waveshare.Devices.Epd7in5bc
 
         //########################################################################################
 
-        #region Constructor / Dispose / Finalizer
-
-        /// <summary>
-        /// Finalizer
-        /// </summary>
-        ~Epd7In5Bc()
-        {
-            Sleep();
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
         #region Public Methods
 
         /// <summary>

@@ -87,7 +87,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
+            #pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
+            #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -101,7 +103,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
+            #pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
+            #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();

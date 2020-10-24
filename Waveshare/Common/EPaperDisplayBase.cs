@@ -26,8 +26,8 @@
 #region Usings
 
 using System;
-using System.Collections.Generic;
 using System.Device.Gpio;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using Waveshare.Interfaces;
@@ -41,6 +41,17 @@ namespace Waveshare.Common
     /// </summary>
     internal abstract class EPaperDisplayBase : IEPaperDisplayInternal
     {
+
+        //########################################################################################
+
+        #region Constants
+
+        /// <summary>
+        /// Timeout for the device Wait Until Ready
+        /// </summary>
+        private const int WaitUntilReadyTimeout = 5000;
+
+        #endregion Constants
 
         //########################################################################################
 
@@ -89,8 +100,7 @@ namespace Waveshare.Common
         {
             Dispose(false);
 
-            EPaperDisplayHardware?.Dispose();
-            EPaperDisplayHardware = null;
+            DeviceShutdown();
         }
 
         /// <summary>
@@ -100,8 +110,7 @@ namespace Waveshare.Common
         {
             Dispose(true);
 
-            EPaperDisplayHardware?.Dispose();
-            EPaperDisplayHardware = null;
+            DeviceShutdown();
 
             GC.SuppressFinalize(this);
         }
@@ -123,14 +132,34 @@ namespace Waveshare.Common
         /// <summary>
         /// Wait until the display is ready
         /// </summary>
-        public void WaitUntilReady()
+        /// <returns>true if device is ready, false for timeout</returns>
+        public bool WaitUntilReady()
+        {
+            return WaitUntilReady(WaitUntilReadyTimeout);
+        }
+
+        /// <summary>
+        /// Wait until the display is ready
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns>true if device is ready, false for timeout</returns>
+        public bool WaitUntilReady(int timeout)
         {
             bool busy;
+
+            var timeoutTimer = Stopwatch.StartNew();
             do
             {
                 SendCommand(GetStatusCommand);
                 busy = !(EPaperDisplayHardware.BusyPin == PinValue.High);
+
+                if (timeoutTimer.ElapsedMilliseconds > timeout)
+                {
+                    return false;
+                }
             } while (busy);
+
+            return true;
         }
 
         /// <summary>
@@ -343,5 +372,24 @@ namespace Waveshare.Common
 
         //########################################################################################
 
+        #region Private Methods
+
+        /// <summary>
+        /// Shut down the device
+        /// </summary>
+        private void DeviceShutdown()
+        {
+            if (EPaperDisplayHardware != null)
+            {
+                Sleep();
+
+                EPaperDisplayHardware?.Dispose();
+                EPaperDisplayHardware = null;
+            }
+        }
+
+        #endregion Private Methods
+
+        //########################################################################################
     }
 }

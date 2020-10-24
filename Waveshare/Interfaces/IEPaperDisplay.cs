@@ -47,9 +47,17 @@ namespace Waveshare.Interfaces
         int Height { get; }
 
         /// <summary>
-        /// Wait until the Display is ready
+        /// Wait until the display is ready
         /// </summary>
-        void WaitUntilReady();
+        /// <returns>true if device is ready, false for timeout</returns>
+        bool WaitUntilReady();
+
+        /// <summary>
+        /// Wait until the display is ready
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns>true if device is ready, false for timeout</returns>
+        bool WaitUntilReady(int timeout);
 
         /// <summary>
         /// Power the controller on.  Do not use with SleepMode.

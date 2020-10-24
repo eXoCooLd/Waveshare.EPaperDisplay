@@ -25,9 +25,9 @@
 
 #region Usings
 
-using System;
 using Moq;
 using NUnit.Framework;
+using System;
 using Waveshare.Devices;
 using Waveshare.Interfaces;
 

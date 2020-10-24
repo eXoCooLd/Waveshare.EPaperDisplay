@@ -46,6 +46,7 @@ namespace Waveshare.Devices
         /// Color: Black and White
         /// Display Resolution: 800*480
         /// </summary>
+        // ReSharper disable once InconsistentNaming
         WaveShare7In5_V2
     }
 }

@@ -40,6 +40,7 @@ using Waveshare.Interfaces;
 
 namespace Waveshare.Test.Devices.Epd7in5_V2
 {
+    // ReSharper disable once InconsistentNaming
     public class Epd7In5_V2Tests
     {
         private List<byte> m_DataBuffer;
@@ -87,7 +88,9 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
+            #pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
+            #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -101,7 +104,9 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
+            #pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
+            #pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
