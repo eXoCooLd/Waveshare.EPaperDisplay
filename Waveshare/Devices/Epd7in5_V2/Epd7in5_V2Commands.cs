@@ -57,7 +57,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         PowerOn = 0x04,
         /// <summary>
-        /// Power ON Measure (PMES) (R05H) **NEW
+        /// Power ON Measure (PMES) (R05H)
         /// </summary>
         PowerOnMeasure = 0x05,
         /// <summary>
@@ -81,19 +81,19 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         DisplayRefresh = 0x12,
         /// <summary>
-        /// Display Start transmission 2 (DTM2, Red) (R13H) **NEW
+        /// Display Start transmission 2 (DTM2, Red) (R13H)
         /// </summary>
         DataStartTransmission2 = 0x13,
         /// <summary>
-        /// Dual SPI (R15H) **NEW
+        /// Dual SPI (R15H)
         /// </summary>
         DualSpi = 0x15,
         /// <summary>
-        /// Auto Sequence (AUTO) (R17H) **NEW
+        /// Auto Sequence (AUTO) (R17H)
         /// </summary>
         AutoSequence = 0x17,
         /// <summary>
-        /// KW LUT option (KWOPT) (R2BH) **NEW
+        /// KW LUT option (KWOPT) (R2BH)
         /// </summary>
         LutOption = 0x2b,
         /// <summary>
@@ -117,7 +117,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         TemperatureSensorRead = 0x43,
         /// <summary>
-        /// Panel Break Check (PBC) (R44H) **NEW
+        /// Panel Break Check (PBC) (R44H)
         /// </summary>
         PanelBreakCheck = 0x44,
         /// <summary>
@@ -129,7 +129,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         LowPowerDetection = 0x51,
         /// <summary>
-        /// End Voltage Setting (EVS) (R52H) **NEW
+        /// End Voltage Setting (EVS) (R52H)
         /// </summary>
         EndVoltageSetting = 0x52,
         /// <summary>
@@ -141,7 +141,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         TconResolution = 0x61,
         /// <summary>
-        /// Gate/Source Start setting (GSST) (R65H) **CHANGE
+        /// Gate/Source Start setting (GSST) (R65H)
         /// </summary>
         GateSourceStartSetting = 0x65,
         /// <summary>
@@ -177,31 +177,31 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         PartialOut = 0x92,
         /// <summary>
-        /// Program Mode (PGM) (RA0H) **NEW
+        /// Program Mode (PGM) (RA0H)
         /// </summary>
         ProgramMode = 0xA0,
         /// <summary>
-        /// Active Programming (APG) (RA1H) **NEW
+        /// Active Programming (APG) (RA1H)
         /// </summary>
         ActiveProgrammng = 0xA1,
         /// <summary>
-        /// Read OTP (ROTP) (RA2H) **NEW
+        /// Read OTP (ROTP) (RA2H)
         /// </summary>
         ReadOtp = 0xA2,
         /// <summary>
-        /// Cascade Setting (CCSET) (RE0H) **NEW
+        /// Cascade Setting (CCSET) (RE0H)
         /// </summary>
         CascadeSetting = 0xE0,
         /// <summary>
-        /// Power Saving (PWS) (RE3H) **NEW
+        /// Power Saving (PWS) (RE3H)
         /// </summary>
         PowerSaving = 0xE3,
         /// <summary>
-        /// LVD Voltage Select (LVSEL) (RE4H) **NEW
+        /// LVD Voltage Select (LVSEL) (RE4H)
         /// </summary>
         LvdVoltageSelect = 0xE4,
         /// <summary>
-        /// Force Temperature (TSSET) (RE5H) **CHANGE
+        /// Force Temperature (TSSET) (RE5H)
         /// </summary>
         ForceTemperature = 0xE5,
         /// <summary>

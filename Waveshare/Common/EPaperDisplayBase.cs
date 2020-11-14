@@ -270,10 +270,13 @@ namespace Waveshare.Common
         /// <param name="data"></param>
         protected void SendData(byte[] data)
         {
+            EPaperDisplayHardware.SpiDcPin = PinValue.High;
+            EPaperDisplayHardware.SpiCsPin = PinValue.Low;
             foreach (var dataByte in data)
             {
-                SendData(dataByte);
+                EPaperDisplayHardware.WriteByte(dataByte);
             }
+            EPaperDisplayHardware.SpiCsPin = PinValue.High;
         }
 
         /// <summary>
