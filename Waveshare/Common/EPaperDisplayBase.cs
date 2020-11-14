@@ -49,7 +49,7 @@ namespace Waveshare.Common
         /// <summary>
         /// Timeout for the device Wait Until Ready
         /// </summary>
-        private const int WaitUntilReadyTimeout = 5000;
+        private const int WaitUntilReadyTimeout = 50000;
 
         #endregion Constants
 

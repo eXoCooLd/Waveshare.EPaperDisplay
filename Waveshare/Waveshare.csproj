@@ -18,7 +18,7 @@
 - Waveshare 7.5inch e-Paper (B)
 - Waveshare 7.5inch e-Paper V2</PackageReleaseNotes>
     <AssemblyName>Waveshare.EPaperDisplay</AssemblyName>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
