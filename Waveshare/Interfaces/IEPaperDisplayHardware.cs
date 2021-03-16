@@ -56,9 +56,15 @@ namespace Waveshare.Interfaces
         PinValue BusyPin { get; set; }
 
         /// <summary>
-        /// Write a byte to the SPI Bus
+        /// Write data to the SPI device
         /// </summary>
-        /// <param name="data"></param>
-        void WriteByte(byte data);
+        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
+        void Write(ReadOnlySpan<byte> buffer);
+        
+        /// <summary>
+        /// Write a byte to the SPI device
+        /// </summary>
+        /// <param name="value">The byte to be written to the SPI device</param>
+        void WriteByte(byte value);
     }
 }
