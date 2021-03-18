@@ -59,8 +59,8 @@ namespace Waveshare.Interfaces
         /// Write data to the SPI device
         /// </summary>
         /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
-        void Write(ReadOnlySpan<byte> buffer);
-        
+        void Write(byte[] buffer);
+
         /// <summary>
         /// Write a byte to the SPI device
         /// </summary>

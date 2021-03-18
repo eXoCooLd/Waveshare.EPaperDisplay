@@ -26,7 +26,6 @@
 #region Usings
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -168,10 +167,10 @@ namespace Waveshare.Devices.Epd7in5bc
             SendData(0x00);
 
             SendCommand(Epd7In5BcCommands.TconResolution);
-            SendData((byte) (Width >> 8)); // source 640
-            SendData((byte) (Width & 0xff));
-            SendData((byte) (Height >> 8)); // gate 384
-            SendData((byte) (Height & 0xff));
+            SendData((byte)(Width >> 8)); // source 640
+            SendData((byte)(Width & 0xff));
+            SendData((byte)(Height >> 8)); // gate 384
+            SendData((byte)(Height & 0xff));
 
             SendCommand(Epd7In5BcCommands.FlashMode);
             SendData(0x03);
@@ -232,7 +231,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         /// <param name="image">Bitmap image to convert</param>
         /// <returns>Byte array of image</returns>
-        internal override byte[] BitmapToData(Bitmap image)
+        internal override void BitmapToData(Bitmap image)
         {
             const int pixelPerByte = 2;
             byte white = MergePixelDataInByte(0x03, 0x03);
@@ -240,7 +239,7 @@ namespace Waveshare.Devices.Epd7in5bc
             int maxY = Math.Min(Height, image.Height);
             int outputStride = Width / pixelPerByte;
             int clearStart = (int)Math.Ceiling((double)(maxX / pixelPerByte)) + 1;
-            byte[] output = new byte[outputStride * Height];
+            byte[] output = new byte[outputStride];
 
             // Convert to greyscale
             BitmapData inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
@@ -250,31 +249,36 @@ namespace Waveshare.Devices.Epd7in5bc
                 byte[] line = new byte[inputData.Stride];
                 byte pixel1, pixel2;
                 int xpos;
-                int ypos = 0;
-                for (int y = 0; y < inputData.Height; y++, scanLine += inputData.Stride)
+                for (int y = 0; y < maxY; y++, scanLine += inputData.Stride)
                 {
                     Marshal.Copy(scanLine, line, 0, line.Length);
                     // Clear end of line if image is smaller than screen
                     for (int x = clearStart; x < outputStride; x++)
                     {
-                        output[ypos + x] = white;
+                        output[x] = white;
                     }
                     for (int x = 0; x < maxX; x += pixelPerByte)
                     {
                         xpos = x * 3;
                         pixel1 = ColorToByte(line[xpos + 2], line[xpos + 1], line[xpos + 0]);
                         pixel2 = xpos + 5 <= maxX ? ColorToByte(line[xpos + 5], line[xpos + 4], line[xpos + 3]) : white;
-                        output[ypos + x / 2] = MergePixelDataInByte(pixel1, pixel2);
+                        output[x / 2] = MergePixelDataInByte(pixel1, pixel2);
                     }
-                    ypos += outputStride;
+                    SendData(output);
+                }
+                if (maxY < Height)
+                {
+                    Array.Clear(output, 0, outputStride);
+                    for (int y = maxY; y < Height; y++)
+                    {
+                        SendData(output);
+                    }
                 }
             }
             finally
             {
                 image.UnlockBits(inputData);
             }
-
-            return output;
         }
 
         /// <summary>
@@ -312,15 +316,20 @@ namespace Waveshare.Devices.Epd7in5bc
         private void FillColor(Color color)
         {
             const int pixelPerByte = 2;
-            var displayBytes = Width / pixelPerByte * Height;
-
             var pixelData = ColorToByte(color.R, color.G, color.B);
-            var twoWhitePixel = MergePixelDataInByte(pixelData, pixelData);
+            var twoColorPixel = MergePixelDataInByte(pixelData, pixelData);
+            var outputWidth = Width / pixelPerByte;
+            var output = new byte[outputWidth];
+
+            for (var x = 0; x < outputWidth; x++)
+            {
+                output[x] = twoColorPixel;
+            }
 
             SendCommand(StartDataTransmissionCommand);
-            for (var i = 0; i < displayBytes; i++)
+            for (var y = 0; y < Height; y++)
             {
-                SendData(twoWhitePixel);
+                SendData(output);
             }
             SendCommand(StopDataTransmissionCommand);
         }

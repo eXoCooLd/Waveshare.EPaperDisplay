@@ -180,13 +180,9 @@ namespace Waveshare.Common
         /// Write data to the SPI device
         /// </summary>
         /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
-        public void Write(ReadOnlySpan<byte> buffer)
+        public void Write(byte[] buffer)
         {
-            const int maxWrite = 4096;
-            for (int x = 0; x < buffer.Length; x += maxWrite)
-            {
-                SpiDevice?.Write(buffer.Slice(x, Math.Min(maxWrite, buffer.Length - x)));
-            }
+            SpiDevice?.Write(buffer);
         }
 
         /// <summary>

@@ -181,10 +181,8 @@ namespace Waveshare.Common
         /// <param name="image">Bitmap that should be displayed</param>
         public void DisplayImage(Bitmap image)
         {
-            var data = BitmapToData(image);
-
             SendCommand(StartDataTransmissionCommand);
-            SendData(data);
+            BitmapToData(image);
             SendCommand(StopDataTransmissionCommand);
 
             TurnOnDisplay();
@@ -314,9 +312,8 @@ namespace Waveshare.Common
         /// <summary>
         /// Convert a Bitmap to a Byte Array
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        internal abstract byte[] BitmapToData(Bitmap image);
+        /// <param name="image">Bitmap to convert</param>
+        internal abstract void BitmapToData(Bitmap image);
 
         /// <summary>
         /// Get the Pixel at position x, y or return a white pixel if it is out of bounds
