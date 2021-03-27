@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,30 +23,36 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-namespace Waveshare.Devices
+#region Usings
+
+#endregion Usings
+
+namespace Waveshare.Devices.Epd7in5bc
 {
     /// <summary>
-    /// Type of the E-Paper Display
+    /// Byte values for the supported hardware colors
     /// </summary>
-    public enum EPaperDisplayType
+    // ReSharper disable once InconsistentNaming
+    internal class Epd7in5bcColors
     {
         /// <summary>
-        /// Default value
+        /// Byte value for color black
         /// </summary>
-        // ReSharper disable once UnusedMember.Global
-        None,
+        public const byte Black = 0x00;
+
         /// <summary>
-        /// Type: Waveshare 7.5inch e-Paper (B)
-        /// Color: Black, White and Red
-        /// Display Resolution: 640*384
+        /// Byte value for color gray
         /// </summary>
-        WaveShare7In5Bc,
+        public const byte Gray = 0x02;
+
         /// <summary>
-        /// Type: Waveshare 7.5inch e-Paper V2
-        /// Color: Black and White
-        /// Display Resolution: 800*480
+        /// Byte value for color white
         /// </summary>
-        // ReSharper disable once InconsistentNaming
-        WaveShare7In5_V2
+        public const byte White = 0x03;
+
+        /// <summary>
+        /// Byte value for color red
+        /// </summary>
+        public const byte Red = 0x04;
     }
 }

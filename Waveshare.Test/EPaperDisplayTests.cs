@@ -28,6 +28,7 @@
 using Moq;
 using NUnit.Framework;
 using System;
+using System.Device.Gpio;
 using Waveshare.Devices;
 using Waveshare.Interfaces;
 
@@ -48,6 +49,7 @@ namespace Waveshare.Test
         public void CreateWaveShare7In5BcTest()
         {
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
+            ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
             EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
             using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
@@ -58,6 +60,7 @@ namespace Waveshare.Test
         public void CreateWaveShare7In5_V2Test()
         {
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
+            ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
             EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
             using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5_V2);

@@ -39,7 +39,7 @@ namespace Waveshare.Devices.Epd7in5bc
     /// <summary>
     /// Type: Waveshare 7.5inch e-Paper (B)
     /// Color: Black, White and Red
-    /// Display Resolution: 640*385
+    /// Display Resolution: 640*384
     /// </summary>
     internal sealed class Epd7In5Bc : EPaperDisplayBase
     {
@@ -47,6 +47,11 @@ namespace Waveshare.Devices.Epd7in5bc
         //########################################################################################
 
         #region Properties
+
+        /// <summary>
+        /// Pixels per Byte on the Device
+        /// </summary>
+        protected override int PixelPerByte { get; } = 2;
 
         /// <summary>
         /// Pixel Width of the Display
@@ -107,7 +112,7 @@ namespace Waveshare.Devices.Epd7in5bc
         }
 
         /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
+        /// Power the controller off.  Do not use with SleepMode.
         /// </summary>
         public override void PowerOff()
         {
@@ -197,27 +202,22 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(byte r, byte g, byte b)
         {
-            const byte black = 0x00;
-            const byte gray = 0x02;
-            const byte white = 0x03;
-            const byte red = 0x04;
-
             if (IsMonochrom(r, g, b))
             {
                 if (r <= 85)
                 {
-                    return black;
+                    return Epd7in5bcColors.Black;
                 }
 
                 if (r <= 170)
                 {
-                    return gray;
+                    return Epd7in5bcColors.Gray;
                 }
 
-                return white;
+                return Epd7in5bcColors.White;
             }
 
-            return r >= 64 ? red : black;
+            return r >= 64 ? Epd7in5bcColors.Red : Epd7in5bcColors.Black;
         }
 
         #endregion Protected Methods
@@ -227,71 +227,43 @@ namespace Waveshare.Devices.Epd7in5bc
         #region Internal Methods
 
         /// <summary>
-        /// Convert a Bitmap to a Byte Array
+        /// Send a Bitmap as Byte Array to the Device
         /// </summary>
         /// <param name="image">Bitmap image to convert</param>
-        /// <returns>Byte array of image</returns>
-        internal override void BitmapToData(Bitmap image)
+        internal override void SendBitmapToDevice(Bitmap image)
         {
-            const int pixelPerByte = 2;
-            byte white = MergePixelDataInByte(0x03, 0x03);
-            int maxX = Math.Min(Width, image.Width);
-            int maxY = Math.Min(Height, image.Height);
-            int outputStride = Width / pixelPerByte;
-            int clearStart = (int)Math.Ceiling((double)(maxX / pixelPerByte)) + 1;
-            byte[] output = new byte[outputStride];
+            var maxX = Math.Min(Width, image.Width);
+            var maxY = Math.Min(Height, image.Height);
 
-            // Convert to greyscale
-            BitmapData inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
             try
             {
-                IntPtr scanLine = inputData.Scan0;
-                byte[] line = new byte[inputData.Stride];
-                byte pixel1, pixel2;
-                int xpos;
-                for (int y = 0; y < maxY; y++, scanLine += inputData.Stride)
+                var scanLine = inputData.Scan0;
+                var line = new byte[inputData.Stride];
+
+                for (var y = 0; y < Height; y++)
                 {
-                    Marshal.Copy(scanLine, line, 0, line.Length);
-                    // Clear end of line if image is smaller than screen
-                    for (int x = clearStart; x < outputStride; x++)
+                    var outputLine = CloneWhiteScanLine();
+
+                    if (y < maxY)
                     {
-                        output[x] = white;
+                        Marshal.Copy(scanLine, line, 0, line.Length);
+
+                        for (var x = 0; x < maxX; x += ColorBytesPerPixel)
+                        {
+                            outputLine[x / ColorBytesPerPixel] = GetDevicePixels(x, line, maxX);
+                        }
+
+                        scanLine += inputData.Stride;
                     }
-                    for (int x = 0; x < maxX; x += pixelPerByte)
-                    {
-                        xpos = x * 3;
-                        pixel1 = ColorToByte(line[xpos + 2], line[xpos + 1], line[xpos + 0]);
-                        pixel2 = xpos + 5 <= maxX ? ColorToByte(line[xpos + 5], line[xpos + 4], line[xpos + 3]) : white;
-                        output[x / 2] = MergePixelDataInByte(pixel1, pixel2);
-                    }
-                    SendData(output);
-                }
-                if (maxY < Height)
-                {
-                    Array.Clear(output, 0, outputStride);
-                    for (int y = maxY; y < Height; y++)
-                    {
-                        SendData(output);
-                    }
+
+                    SendData(outputLine);
                 }
             }
             finally
             {
                 image.UnlockBits(inputData);
             }
-        }
-
-        /// <summary>
-        /// Merge two DataBytes into one Byte
-        /// </summary>
-        /// <param name="pixel1"></param>
-        /// <param name="pixel2"></param>
-        /// <returns></returns>
-        internal static byte MergePixelDataInByte(byte pixel1, byte pixel2)
-        {
-            var output = (byte)(pixel1 << 4);
-            output |= pixel2;
-            return output;
         }
 
         #endregion Internal Methods
@@ -315,24 +287,18 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <param name="color">Color to fill the screen</param>
         private void FillColor(Color color)
         {
-            const int pixelPerByte = 2;
-            var pixelData = ColorToByte(color.R, color.G, color.B);
-            var twoColorPixel = MergePixelDataInByte(pixelData, pixelData);
-            var outputWidth = Width / pixelPerByte;
-            var output = new byte[outputWidth];
-
-            for (var x = 0; x < outputWidth; x++)
-            {
-                output[x] = twoColorPixel;
-            }
+            var outputLine = GetColoredLineOnDevice(color);
 
             SendCommand(StartDataTransmissionCommand);
+
             for (var y = 0; y < Height; y++)
             {
-                SendData(output);
+                SendData(outputLine);
             }
+
             SendCommand(StopDataTransmissionCommand);
         }
+
         #endregion Private Methods
 
         //########################################################################################

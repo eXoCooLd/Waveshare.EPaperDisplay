@@ -25,7 +25,6 @@
 
 #region Usings
 
-using System;
 using System.Device.Gpio;
 using System.Device.Spi;
 using Waveshare.Interfaces;

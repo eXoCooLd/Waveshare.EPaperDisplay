@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Collections.ObjectModel;
 using System.Device.Gpio;
 using System.Diagnostics;
 using System.Drawing;
@@ -51,11 +52,58 @@ namespace Waveshare.Common
         /// </summary>
         private const int WaitUntilReadyTimeout = 50000;
 
+        /// <summary>
+        /// Color Bytes per Pixel (R, G, B)
+        /// </summary>
+        protected const int ColorBytesPerPixel = 3;
+
         #endregion Constants
+        
+        //########################################################################################
+
+        #region Fields
+
+        /// <summary>
+        /// A white scan line on the device
+        /// </summary>
+        private ReadOnlyCollection<byte> m_WhiteLineOnDevice;
+
+        /// <summary>
+        /// Byte value for a block (PixelPerByte) of white pixels on the Device
+        /// </summary>
+        private byte? m_WhitePixelBlockOnDevice;
+
+        #endregion Fields
 
         //########################################################################################
 
         #region Properties
+
+        /// <summary>
+        /// Default white scan line on the device
+        /// </summary>
+        private ReadOnlyCollection<byte> WhiteLineOnDevice => m_WhiteLineOnDevice ?? (m_WhiteLineOnDevice = GetWhiteLineOnDevice());
+
+        /// <summary>
+        /// Byte value for a block (PixelPerByte) of white pixels on the Device
+        /// </summary>
+        protected byte WhitePixelBlockOnDevice
+        {
+            get
+            {
+                if (!m_WhitePixelBlockOnDevice.HasValue)
+                {
+                    m_WhitePixelBlockOnDevice = GetMergedPixelDataInByte(Color.White);
+                }
+
+                return m_WhitePixelBlockOnDevice.Value;
+            }
+        }
+
+        /// <summary>
+        /// Pixels per Byte on the Device
+        /// </summary>
+        protected abstract int PixelPerByte { get; }
 
         /// <summary>
         /// E-Paper Hardware Interface for GPIO and SPI Bus
@@ -182,7 +230,7 @@ namespace Waveshare.Common
         public void DisplayImage(Bitmap image)
         {
             SendCommand(StartDataTransmissionCommand);
-            BitmapToData(image);
+            SendBitmapToDevice(image);
             SendCommand(StopDataTransmissionCommand);
 
             TurnOnDisplay();
@@ -215,7 +263,7 @@ namespace Waveshare.Common
         public abstract void PowerOn();
 
         /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
+        /// Power the controller off.  Do not use with SleepMode.
         /// </summary>
         public abstract void PowerOff();
 
@@ -287,6 +335,80 @@ namespace Waveshare.Common
         }
 
         /// <summary>
+        /// Get a colored scan line on the device
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        protected byte[] GetColoredLineOnDevice(Color color)
+        {
+            var devicePixel = GetMergedPixelDataInByte(color);
+
+            var outputWidth = Width / PixelPerByte;
+            var outputLine = new byte[outputWidth];
+
+            for (var x = 0; x < outputLine.Length; x++)
+            {
+                outputLine[x] = devicePixel;
+            }
+
+            return outputLine;
+        }
+
+        /// <summary>
+        /// Clone the default white scan line into a new byte array
+        /// </summary>
+        /// <returns></returns>
+        protected byte[] CloneWhiteScanLine()
+        {
+            var scanLine = new byte[WhiteLineOnDevice.Count];
+            WhiteLineOnDevice.CopyTo(scanLine, 0);
+            return scanLine;
+        }
+
+        /// <summary>
+        /// Get Pixel from the byte array
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="xPosition"></param>
+        /// <param name="maxX"></param>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        protected byte GetPixelFromArray(byte[] line, int xPosition, int maxX, int pixel)
+        {
+            var pixelWith = ColorBytesPerPixel * pixel;
+            var colorR = xPosition + pixelWith + 2;
+            var colorG = xPosition + pixelWith + 1;
+            var colorB = xPosition + pixelWith + 0;
+
+            if (colorR >= maxX)
+            {
+                return WhitePixelBlockOnDevice;
+            }
+
+            return ColorToByte(line[colorR], line[colorG], line[colorB]);
+        }
+
+        /// <summary>
+        /// Get the two pixel from the array and merge them into a device pixel
+        /// </summary>
+        /// <param name="xPosition"></param>
+        /// <param name="line"></param>
+        /// <param name="maxX"></param>
+        /// <returns></returns>
+        protected byte GetDevicePixels(int xPosition, byte[] line, int maxX)
+        {
+            var xPos = xPosition * ColorBytesPerPixel;
+
+            var pixels = new byte[PixelPerByte];
+            for (var i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = GetPixelFromArray(line, xPos, maxX, i);
+            }
+
+            return MergePixelDataInByte(pixels);
+        }
+
+        /// <summary>
         /// Device specific Initializer
         /// </summary>
         protected abstract void DeviceInitialize();
@@ -299,7 +421,9 @@ namespace Waveshare.Common
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="pixel"></param>
+        /// <param name="r">Red color byte</param>
+        /// <param name="g">Green color byte</param>
+        /// <param name="b">Blue color byte</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected abstract byte ColorToByte(byte r, byte g, byte b);
 
@@ -310,28 +434,40 @@ namespace Waveshare.Common
         #region Internal Methods
 
         /// <summary>
-        /// Convert a Bitmap to a Byte Array
+        /// Send a Bitmap as Byte Array to the Device
         /// </summary>
         /// <param name="image">Bitmap to convert</param>
-        internal abstract void BitmapToData(Bitmap image);
+        internal abstract void SendBitmapToDevice(Bitmap image);
 
         /// <summary>
-        /// Get the Pixel at position x, y or return a white pixel if it is out of bounds
+        /// Merge pixels into a Device Byte
         /// </summary>
-        /// <param name="image"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="pixel"></param>
         /// <returns></returns>
-        internal static Color GetPixel(Bitmap image, int x, int y)
+        internal byte MergePixelDataInByte(params byte[] pixel)
         {
-            var color = Color.White;
-
-            if (x < image.Width && y < image.Height)
+            if (pixel == null || pixel.Length == 0)
             {
-                color = image.GetPixel(x, y);
+                throw new ArgumentException($"Argument {nameof(pixel)} can not be null or empty", nameof(pixel));
             }
 
-            return color;
+            if (pixel.Length != PixelPerByte)
+            {
+                throw new ArgumentException($"Argument {nameof(pixel)}.Length is not PixelPerByte {PixelPerByte}", nameof(pixel));
+            }
+
+            const int bitsInByte = 8;
+            var bitMoveLength = bitsInByte / PixelPerByte;
+
+            byte output = 0;
+
+            for (var i = 0; i < pixel.Length; i++)
+            {
+                var moveFactor = bitsInByte - bitMoveLength * (i + 1);
+                output |= (byte)(pixel[i] << moveFactor);
+            }
+
+            return output;
         }
 
         #endregion Internal Methods
@@ -352,6 +488,32 @@ namespace Waveshare.Common
                 EPaperDisplayHardware?.Dispose();
                 EPaperDisplayHardware = null;
             }
+        }
+        /// <summary>
+        /// Return a white scan line for the device
+        /// </summary>
+        /// <returns></returns>
+        private ReadOnlyCollection<byte> GetWhiteLineOnDevice()
+        {
+            return new ReadOnlyCollection<byte>(GetColoredLineOnDevice(Color.White));
+        }
+
+        /// <summary>
+        /// Get a byte on the device with one Color for all pixels
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        private byte GetMergedPixelDataInByte(Color color)
+        {
+            var pixelData = ColorToByte(color.R, color.G, color.B);
+            var deviceBytesPerPixel = new byte[PixelPerByte];
+
+            for (var i = 0; i < deviceBytesPerPixel.Length; i++)
+            {
+                deviceBytesPerPixel[i] = pixelData;
+            }
+
+            return MergePixelDataInByte(deviceBytesPerPixel);
         }
 
         #endregion Private Methods

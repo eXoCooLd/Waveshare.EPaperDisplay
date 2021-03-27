@@ -24,9 +24,14 @@
 #endregion Copyright
 
 #region Usings
+
 using System;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Waveshare.Devices;
+
 #endregion Usings
 
 namespace Waveshare.Example
@@ -34,26 +39,73 @@ namespace Waveshare.Example
     /// <summary>
     /// Example for the Waveshare E-Paper Library
     /// </summary>
-    public class Program
+    internal class Program
     {
+
+        //########################################################################################
+
+        #region Public Methods
+
         /// <summary>
         /// Application Main
         /// </summary>
-        public static void Main()
+        /// <param name="args">Commandline arguments</param>
+        public static void Main(string[] args)
         {
-            const string fileName = "like_a_sir_640x385.bmp";
-            using var bitmap = new Bitmap(Image.FromFile(fileName, true));
+            string bitmapFilePath;
+            if (args == null || args.Length == 0)
+            {
+                const string fileName = "like_a_sir_640x384.bmp";
+                bitmapFilePath = Path.Combine(ExecutingAssemblyPath, fileName);
+            }
+            else
+            {
+                bitmapFilePath = args.First();
+            }
+
+            if (!File.Exists(bitmapFilePath))
+            {
+                Console.WriteLine($"Can not find Bitmap file: '{bitmapFilePath}'!");
+                return;
+            }
+
+            using var bitmap = new Bitmap(bitmapFilePath);
 
             using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
 
             ePaperDisplay.Clear();
             ePaperDisplay.WaitUntilReady();
 
-            Console.WriteLine($"Sending {fileName} to E-Paper Display...");
+            Console.WriteLine($"Sending '{bitmapFilePath}' to E-Paper Display...");
             ePaperDisplay.DisplayImage(bitmap);
             Console.WriteLine("Done");
 
             ePaperDisplay.Sleep();
         }
+
+        #endregion Public Methods
+
+        //########################################################################################
+
+        #region Private Methods
+
+        /// <summary>
+        /// Return the path of the executing assembly
+        /// </summary>
+        private static string ExecutingAssemblyPath
+        {
+            get
+            {
+                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                var uri = new UriBuilder(codeBase);
+                var path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
+        }
+
+        #endregion Private Methods
+
+        //########################################################################################
+
     }
 }

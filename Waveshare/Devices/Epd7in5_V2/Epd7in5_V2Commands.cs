@@ -30,6 +30,7 @@ namespace Waveshare.Devices.Epd7in5_V2
     /// https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
     /// </summary>
     // ReSharper disable UnusedMember.Global
+    // ReSharper disable InconsistentNaming
     internal enum Epd7In5_V2Commands
     {
         /// <summary>
@@ -183,7 +184,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Active Programming (APG) (RA1H)
         /// </summary>
-        ActiveProgrammng = 0xA1,
+        ActiveProgramming = 0xA1,
         /// <summary>
         /// Read OTP (ROTP) (RA2H)
         /// </summary>
@@ -209,5 +210,6 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         TemperatureBoundaryPhaseC2 = 0xE7
     }
+    // ReSharper restore InconsistentNaming
     // ReSharper restore UnusedMember.Global
 }

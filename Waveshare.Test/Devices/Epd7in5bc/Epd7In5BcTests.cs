@@ -182,7 +182,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
             const byte white = 0x03;
-            var twoWhitePixel = Epd7In5Bc.MergePixelDataInByte(white, white);
+            var twoWhitePixel = result.MergePixelDataInByte(white, white);
 
             var validBuffer = new List<byte>
             {
@@ -216,7 +216,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
             const byte black = 0x00;
-            var twoBlackPixel = Epd7In5Bc.MergePixelDataInByte(black, black);
+            var twoBlackPixel = result.MergePixelDataInByte(black, black);
 
             var validBuffer = new List<byte>
             {
@@ -250,7 +250,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             };
 
             m_DataBuffer.Clear();
-            result.BitmapToData(image);
+            result.SendBitmapToDevice(image);
             validBuffer.AddRange(m_DataBuffer);
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
@@ -279,7 +279,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             };
 
             m_DataBuffer.Clear();
-            result.BitmapToData(image);
+            result.SendBitmapToDevice(image);
             validBuffer.AddRange(m_DataBuffer);
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
@@ -338,6 +338,24 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
+        [Test]
+        public void TestMergePixelDataInByte()
+        {
+            using var result = new Epd7In5Bc();
+
+            var random = new Random();
+            for (int i = 0; i < 200; i++)
+            {
+                var b1 = (byte) random.Next(0, 0x0F);
+                var b2 = (byte) random.Next(0, 0x0F);
+
+                var oldResult = MergePixelDataInByte(b1, b2);
+                var newResult = result.MergePixelDataInByte(b1, b2);
+
+                Assert.AreEqual(oldResult, newResult, $"Merged Byte Run {i} is wrong. Expected {oldResult}, Returned {newResult}");
+            }
+        }
+
         private static Bitmap CreateSampleBitmap(int width, int height)
         {
             var image = new Bitmap(width, height);
@@ -373,6 +391,19 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             }
 
             return image;
+        }
+
+        /// <summary>
+        /// Original Method: Merge two DataBytes into one Byte
+        /// </summary>
+        /// <param name="pixel1"></param>
+        /// <param name="pixel2"></param>
+        /// <returns></returns>
+        private static byte MergePixelDataInByte(byte pixel1, byte pixel2)
+        {
+            var output = (byte)(pixel1 << 4);
+            output |= pixel2;
+            return output;
         }
     }
 }

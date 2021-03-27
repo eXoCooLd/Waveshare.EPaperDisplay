@@ -18,16 +18,12 @@
 - Waveshare 7.5inch e-Paper (B)
 - Waveshare 7.5inch e-Paper V2</PackageReleaseNotes>
     <AssemblyName>Waveshare.EPaperDisplay</AssemblyName>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Device.Gpio" Version="1.4.0" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Devices\Epd7in5bc\" />
   </ItemGroup>
 
 </Project>
