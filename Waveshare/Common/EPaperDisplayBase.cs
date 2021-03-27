@@ -370,17 +370,17 @@ namespace Waveshare.Common
         /// </summary>
         /// <param name="line"></param>
         /// <param name="xPosition"></param>
-        /// <param name="maxX"></param>
         /// <param name="pixel"></param>
         /// <returns></returns>
-        protected byte GetPixelFromArray(byte[] line, int xPosition, int maxX, int pixel)
+        protected byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
         {
             var pixelWith = ColorBytesPerPixel * pixel;
+
             var colorR = xPosition + pixelWith + 2;
             var colorG = xPosition + pixelWith + 1;
             var colorB = xPosition + pixelWith + 0;
 
-            if (colorR >= maxX)
+            if (colorR >= line.Length)
             {
                 return WhitePixelBlockOnDevice;
             }
@@ -393,16 +393,13 @@ namespace Waveshare.Common
         /// </summary>
         /// <param name="xPosition"></param>
         /// <param name="line"></param>
-        /// <param name="maxX"></param>
         /// <returns></returns>
-        protected byte GetDevicePixels(int xPosition, byte[] line, int maxX)
+        protected byte GetDevicePixels(int xPosition, byte[] line)
         {
-            var xPos = xPosition * ColorBytesPerPixel;
-
             var pixels = new byte[PixelPerByte];
             for (var i = 0; i < pixels.Length; i++)
             {
-                pixels[i] = GetPixelFromArray(line, xPos, maxX, i);
+                pixels[i] = GetPixelFromArray(line, xPosition, i);
             }
 
             return MergePixelDataInByte(pixels);

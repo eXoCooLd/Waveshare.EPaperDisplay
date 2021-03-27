@@ -236,11 +236,15 @@ namespace Waveshare.Devices.Epd7in5bc
             var maxY = Math.Min(Height, image.Height);
 
             var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            var bytesPerPixelInImage = inputData.Stride / image.Width;
+            var deviceLineWithInByte = Width * bytesPerPixelInImage;
+            var deviceStep = bytesPerPixelInImage * PixelPerByte;
+
             try
             {
                 var scanLine = inputData.Scan0;
                 var line = new byte[inputData.Stride];
-
+                
                 for (var y = 0; y < Height; y++)
                 {
                     var outputLine = CloneWhiteScanLine();
@@ -249,9 +253,9 @@ namespace Waveshare.Devices.Epd7in5bc
                     {
                         Marshal.Copy(scanLine, line, 0, line.Length);
 
-                        for (var x = 0; x < maxX; x += ColorBytesPerPixel)
+                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                         {
-                            outputLine[x / ColorBytesPerPixel] = GetDevicePixels(x, line, maxX);
+                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
                         }
 
                         scanLine += inputData.Stride;

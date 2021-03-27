@@ -52,7 +52,39 @@ namespace Waveshare.Example
         /// <param name="args">Commandline arguments</param>
         public static void Main(string[] args)
         {
+            using var bitmap = LoadBitmap(args);
+            if (bitmap == null)
+            {
+                return;
+            }
+
+            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
+
+            ePaperDisplay.Clear();
+            ePaperDisplay.WaitUntilReady();
+
+            Console.WriteLine("Sending Image to E-Paper Display...");
+            ePaperDisplay.DisplayImage(bitmap);
+            Console.WriteLine("Done");
+
+            ePaperDisplay.Sleep();
+        }
+
+        #endregion Public Methods
+
+        //########################################################################################
+
+        #region Private Methods
+
+        /// <summary>
+        /// Load Bitmap from arguments or get the default bitmap
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static Bitmap LoadBitmap(string[] args)
+        {
             string bitmapFilePath;
+
             if (args == null || args.Length == 0)
             {
                 const string fileName = "like_a_sir_640x384.bmp";
@@ -66,28 +98,11 @@ namespace Waveshare.Example
             if (!File.Exists(bitmapFilePath))
             {
                 Console.WriteLine($"Can not find Bitmap file: '{bitmapFilePath}'!");
-                return;
+                return null;
             }
 
-            using var bitmap = new Bitmap(bitmapFilePath);
-
-            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
-
-            ePaperDisplay.Clear();
-            ePaperDisplay.WaitUntilReady();
-
-            Console.WriteLine($"Sending '{bitmapFilePath}' to E-Paper Display...");
-            ePaperDisplay.DisplayImage(bitmap);
-            Console.WriteLine("Done");
-
-            ePaperDisplay.Sleep();
+            return new Bitmap(bitmapFilePath);
         }
-
-        #endregion Public Methods
-
-        //########################################################################################
-
-        #region Private Methods
 
         /// <summary>
         /// Return the path of the executing assembly

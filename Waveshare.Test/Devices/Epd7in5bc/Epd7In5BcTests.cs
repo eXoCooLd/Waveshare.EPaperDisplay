@@ -39,10 +39,24 @@ using Waveshare.Interfaces;
 
 namespace Waveshare.Test.Devices.Epd7in5bc
 {
+    /// <summary>
+    /// All UnitTests for the Epd7In5BcTests Device
+    /// </summary>
     public class Epd7In5BcTests
     {
+
+        //########################################################################################
+
+        #region Fields
+
         private List<byte> m_DataBuffer;
         private Mock<IEPaperDisplayHardware> m_EPaperDisplayHardwareMock;
+
+        #endregion Fields
+
+        //########################################################################################
+
+        #region Setup
 
         [SetUp]
         public void Setup()
@@ -54,6 +68,12 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<byte[]>())).Callback((byte[] b) => m_DataBuffer.AddRange(b));
             m_EPaperDisplayHardwareMock.Setup(e => e.WriteByte(It.IsAny<byte>())).Callback((byte b) => m_DataBuffer.Add(b));
         }
+
+        #endregion Setup
+
+        //########################################################################################
+
+        #region Tests
 
         [Test]
         public void ConstructorTest()
@@ -250,8 +270,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             };
 
             m_DataBuffer.Clear();
-            result.SendBitmapToDevice(image);
-            validBuffer.AddRange(m_DataBuffer);
+
+            validBuffer.AddRange(BitmapToData(image, result.Width, result.Height));
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
@@ -279,8 +299,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             };
 
             m_DataBuffer.Clear();
-            result.SendBitmapToDevice(image);
-            validBuffer.AddRange(m_DataBuffer);
+
+            validBuffer.AddRange(BitmapToData(image, result.Width, result.Height));
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
@@ -356,6 +376,12 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             }
         }
 
+        #endregion Tests
+
+        //########################################################################################
+
+        #region Helper
+
         private static Bitmap CreateSampleBitmap(int width, int height)
         {
             var image = new Bitmap(width, height);
@@ -393,6 +419,11 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             return image;
         }
 
+        #endregion Helper
+
+        //########################################################################################
+
+        #region Old working Implementation
         /// <summary>
         /// Original Method: Merge two DataBytes into one Byte
         /// </summary>
@@ -405,5 +436,100 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             output |= pixel2;
             return output;
         }
+
+        /// <summary>
+        /// Original Method: Convert a Bitmap to a Byte Array
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        private static byte[] BitmapToData(Bitmap image, int width, int height)
+        {
+            const int pixelPerByte = 2;
+
+            var imageData = new List<byte>();
+
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x += pixelPerByte)
+                {
+                    var pixel1 = GetPixel(image, x, y);
+                    var pixel1Data = ColorToByte(pixel1);
+
+                    var pixel2 = GetPixel(image, x + 1, y);
+                    var pixel2Data = ColorToByte(pixel2);
+
+                    var mergedData = MergePixelDataInByte(pixel1Data, pixel2Data);
+                    imageData.Add(mergedData);
+                }
+            }
+
+            return imageData.ToArray();
+        }
+
+        /// <summary>
+        /// Original Method: Get the Pixel at position x, y or return a white pixel if it is out of bounds
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        private static Color GetPixel(Bitmap image, int x, int y)
+        {
+            var color = Color.White;
+
+            if (x < image.Width && y < image.Height)
+            {
+                color = image.GetPixel(x, y);
+            }
+
+            return color;
+        }
+
+        /// <summary>
+        /// Original Method: Convert a pixel to a DataByte
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns>Pixel converted to specific byte value for the hardware</returns>
+        private static byte ColorToByte(Color pixel)
+        {
+            const byte black = 0x00;
+            const byte gray = 0x02;
+            const byte white = 0x03;
+            const byte red = 0x04;
+
+            if (IsMonochrom(pixel))
+            {
+                if (pixel.R <= 85)
+                {
+                    return black;
+                }
+
+                if (pixel.R <= 170)
+                {
+                    return gray;
+                }
+
+                return white;
+            }
+
+            return pixel.R >= 64 ? red : black;
+        }
+
+        /// <summary>
+        /// Original Method: Check if a Pixel is Monochrom (white, gray or black)
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        private static bool IsMonochrom(Color pixel)
+        {
+            return pixel.R == pixel.G && pixel.G == pixel.B;
+        }
+
+        #endregion Old working Implementation
+
+        //########################################################################################
+
     }
 }
