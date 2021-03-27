@@ -25,6 +25,7 @@
 
 #region Usings
 
+using System;
 using System.Device.Gpio;
 using System.Device.Spi;
 using Waveshare.Interfaces;
@@ -176,12 +177,21 @@ namespace Waveshare.Common
         #region Public Methods
 
         /// <summary>
-        /// Write a byte to the SPI Bus
+        /// Write data to the SPI device
         /// </summary>
-        /// <param name="data"></param>
-        public void WriteByte(byte data)
+        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
+        public void Write(byte[] buffer)
         {
-            SpiDevice?.WriteByte(data);
+            SpiDevice?.Write(buffer);
+        }
+
+        /// <summary>
+        /// Write a byte to the SPI device
+        /// </summary>
+        /// <param name="value">The byte to be written to the SPI device</param>
+        public void WriteByte(byte value)
+        {
+            SpiDevice?.WriteByte(value);
         }
 
         #endregion Public Methods
@@ -189,7 +199,6 @@ namespace Waveshare.Common
         //########################################################################################
 
         #region Private Methods
-
         /// <summary>
         /// Create the GPIO Controller
         /// </summary>

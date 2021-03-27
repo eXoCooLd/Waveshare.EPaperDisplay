@@ -51,6 +51,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_EPaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
             m_EPaperDisplayHardwareMock.Setup(e => e.BusyPin).Returns(PinValue.High);
+            m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<byte[]>())).Callback((byte[] b) => m_DataBuffer.AddRange(b));
             m_EPaperDisplayHardwareMock.Setup(e => e.WriteByte(It.IsAny<byte>())).Callback((byte b) => m_DataBuffer.Add(b));
         }
 
@@ -82,13 +83,13 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         {
             var result = new Epd7In5Bc();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
-            
+
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
-            #pragma warning disable IDE0059 // Unnecessary assignment of a value
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
-            #pragma warning restore IDE0059 // Unnecessary assignment of a value
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -102,9 +103,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             Assert.NotNull(result, "Object should not be null");
 
             // ReSharper disable once RedundantAssignment
-            #pragma warning disable IDE0059 // Unnecessary assignment of a value
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
             result = null;
-            #pragma warning restore IDE0059 // Unnecessary assignment of a value
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -243,24 +244,23 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             var image = CreateSampleBitmap(result.Width, result.Height);
 
-            m_DataBuffer.Clear();
-
-            result.DisplayImage(image);
-
-            var imageData = result.BitmapToData(image);
-
             var validBuffer = new List<byte>
             {
                 (byte) Epd7In5BcCommands.DataStartTransmission1
             };
 
-            validBuffer.AddRange(imageData);
-
+            m_DataBuffer.Clear();
+            result.BitmapToData(image);
+            validBuffer.AddRange(m_DataBuffer);
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
             validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+
+            m_DataBuffer.Clear();
+
+            result.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -271,26 +271,25 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             using var result = new Epd7In5Bc();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
-            var image = CreateSampleBitmap(result.Width/2, result.Height/2);
-
-            m_DataBuffer.Clear();
-
-            result.DisplayImage(image);
-
-            var imageData = result.BitmapToData(image);
+            var image = CreateSampleBitmap(result.Width / 2, result.Height / 2);
 
             var validBuffer = new List<byte>
             {
                 (byte) Epd7In5BcCommands.DataStartTransmission1
             };
 
-            validBuffer.AddRange(imageData);
-
+            m_DataBuffer.Clear();
+            result.BitmapToData(image);
+            validBuffer.AddRange(m_DataBuffer);
             validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
             validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
             validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+
+            m_DataBuffer.Clear();
+
+            result.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }

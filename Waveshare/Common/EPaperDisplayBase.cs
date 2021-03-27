@@ -181,10 +181,8 @@ namespace Waveshare.Common
         /// <param name="image">Bitmap that should be displayed</param>
         public void DisplayImage(Bitmap image)
         {
-            var data = BitmapToData(image);
-
             SendCommand(StartDataTransmissionCommand);
-            SendData(data);
+            BitmapToData(image);
             SendCommand(StopDataTransmissionCommand);
 
             TurnOnDisplay();
@@ -272,23 +270,20 @@ namespace Waveshare.Common
         {
             EPaperDisplayHardware.SpiDcPin = PinValue.High;
             EPaperDisplayHardware.SpiCsPin = PinValue.Low;
-            foreach (var dataByte in data)
-            {
-                EPaperDisplayHardware.WriteByte(dataByte);
-            }
+            EPaperDisplayHardware.Write(data);
             EPaperDisplayHardware.SpiCsPin = PinValue.High;
         }
 
         /// <summary>
         /// Check if a Pixel is Monochrom (white, gray or black)
         /// </summary>
-        /// <param name="pixel"></param>
+        /// <param name="r">Red color byte</param>
+        /// <param name="g">Green color byte</param>
+        /// <param name="b">Blue color byte</param>
         /// <returns></returns>
-        protected static bool IsMonochrom(Color pixel)
+        protected static bool IsMonochrom(byte r, byte g, byte b)
         {
-            return pixel.R == pixel.G &&
-                   pixel.R == pixel.B &&
-                   pixel.G == pixel.B;
+            return r == g && g == b;
         }
 
         /// <summary>
@@ -306,7 +301,7 @@ namespace Waveshare.Common
         /// </summary>
         /// <param name="pixel"></param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        protected abstract byte ColorToByte(Color pixel);
+        protected abstract byte ColorToByte(byte r, byte g, byte b);
 
         #endregion Protected Methods
 
@@ -317,9 +312,8 @@ namespace Waveshare.Common
         /// <summary>
         /// Convert a Bitmap to a Byte Array
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        internal abstract byte[] BitmapToData(Bitmap image);
+        /// <param name="image">Bitmap to convert</param>
+        internal abstract void BitmapToData(Bitmap image);
 
         /// <summary>
         /// Get the Pixel at position x, y or return a white pixel if it is out of bounds
