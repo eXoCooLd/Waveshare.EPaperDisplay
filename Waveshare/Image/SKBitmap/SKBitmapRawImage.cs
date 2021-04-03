@@ -25,26 +25,18 @@
 
 #region Usings
 
-using SkiaSharp;
 using System;
-using System.Runtime.CompilerServices;
-using Waveshare.Common;
-using Waveshare.Devices;
-using Waveshare.Devices.Epd7in5_V2;
-using Waveshare.Devices.Epd7in5bc;
-using Waveshare.Image.SKBitmap;
 using Waveshare.Interfaces;
 
 #endregion Usings
 
-[assembly: InternalsVisibleTo("Waveshare.Test")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
-namespace Waveshare
+namespace Waveshare.Image.SKBitmap
 {
     /// <summary>
-    /// E-Paper Display Factory
+    /// Wrapper for a SKBitmap into a RAW Image for the E-Paper Display
     /// </summary>
-    public static class EPaperDisplay
+    // ReSharper disable once InconsistentNaming
+    internal class SKBitmapRawImage : IRawImage
     {
 
         //########################################################################################
@@ -52,61 +44,76 @@ namespace Waveshare
         #region Properties
 
         /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// IntPointer to the Byte Array of the Image
         /// </summary>
-        internal static Lazy<IEPaperDisplayHardware> EPaperDisplayHardware { get; set; } = new Lazy<IEPaperDisplayHardware>(() => new EPaperDisplayHardware());
+        private IntPtr m_ScanLine;
+
+        /// <summary>
+        /// The SKBitmap used for the ScanLine
+        /// </summary>
+        private SkiaSharp.SKBitmap Bitmap { get; set; }
+
+        /// <summary>
+        /// Width of the Image or Device Width
+        /// </summary>
+        public int Width => Bitmap.Width;
+
+        /// <summary>
+        /// Height of the Image or Device Height
+        /// </summary>
+        public int Height => Bitmap.Height;
+
+        /// <summary>
+        /// Used Bytes per Pixel
+        /// </summary>
+        public int BytesPerPixel => Bitmap.BytesPerPixel;
+
+        /// <summary>
+        /// Length of a ScanLine in Bytes
+        /// </summary>
+        public int Stride => Bitmap.Width * Bitmap.BytesPerPixel;
+
+        /// <summary>
+        /// IntPointer to the Byte Array of the Image
+        /// </summary>
+        public IntPtr ScanLine
+        {
+            get
+            {
+                if (m_ScanLine == IntPtr.Zero)
+                {
+                    m_ScanLine = Bitmap.GetPixels();
+                }
+
+                return m_ScanLine;
+            }
+        }
 
         #endregion Properties
 
         //########################################################################################
 
-        #region Public Methods
+        #region Constructor / Dispose / Finalizer
 
         /// <summary>
-        /// Create a instance of a E-Paper Display
+        /// Constructor with the SKBitmap
         /// </summary>
-        /// <param name="displayType"></param>
-        /// <returns></returns>
-        public static IEPaperDisplayImage<SKBitmap> Create(EPaperDisplayType displayType)
+        /// <param name="bitmap"></param>
+        public SKBitmapRawImage(SkiaSharp.SKBitmap bitmap)
         {
-            var ePaperDisplay = CreateEPaperDisplay(displayType);
-            return ePaperDisplay != null ? new SKBitmapLoader(ePaperDisplay) : null;
+            Bitmap = bitmap;
         }
-
-        #endregion Public Methods
-
-        //########################################################################################
-
-        #region Private Methods
 
         /// <summary>
-        /// Create a instance of a internal E-Paper Display
+        /// Dispose
         /// </summary>
-        /// <param name="displayType"></param>
-        /// <returns></returns>
-        private static IEPaperDisplayInternal CreateEPaperDisplay(EPaperDisplayType displayType)
+        public void Dispose()
         {
-            IEPaperDisplayInternal display;
-
-            switch (displayType)
-            {
-                case EPaperDisplayType.WaveShare7In5Bc:
-                    display = new Epd7In5Bc();
-                    break;
-                case EPaperDisplayType.WaveShare7In5_V2:
-                    display = new Epd7In5_V2();
-                    break;
-                default:
-                    display = null;
-                    break;
-            }
-
-            display?.Initialize(EPaperDisplayHardware.Value);
-
-            return display;
+            Bitmap?.Dispose();
+            Bitmap = null;
         }
 
-        #endregion Private Methods
+        #endregion Constructor / Dispose / Finalizer
 
         //########################################################################################
 

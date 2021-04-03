@@ -26,8 +26,6 @@
 #region Usings
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -90,8 +88,8 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         public override void Clear()
         {
-            FillColor(Epd7In5_V2Commands.DataStartTransmission1, Color.White);
-            FillColor(Epd7In5_V2Commands.DataStartTransmission2, Color.White);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission1, ByteColors.White);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission2, ByteColors.White);
             TurnOnDisplay();
         }
 
@@ -100,7 +98,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         public override void ClearBlack()
         {
-            FillColor(Epd7In5_V2Commands.DataStartTransmission2, Color.Black);
+            FillColor(Epd7In5_V2Commands.DataStartTransmission2, ByteColors.Black);
             TurnOnDisplay();
         }
 
@@ -226,115 +224,106 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Send a Bitmap as Byte Array to the Device
         /// </summary>
-        /// <param name="image">Bitmap image to convert</param>
-        internal override void SendBitmapToDevice(Bitmap image)
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
         {
-            const int pixelPerByte = 8;
-            int maxX = Math.Min(Width, image.Width);
-            int maxY = Math.Min(Height, image.Height);
             sbyte[,] data = new sbyte[maxX, 2];
             byte[] masks = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-            int outputStride = Width / pixelPerByte;
+            int outputStride = Width / PixelPerByte;
             byte[] output = new byte[outputStride];
             int lineC = 0;
 
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            try
+            byte[] inputLine = new byte[stride];
+            bool odd = false;
+            bool dither = false;
+            sbyte error;
+            bool j;
+
+            for (int y = 0; y < maxY; y++, scanLine += stride)
             {
-                IntPtr scanLine = inputData.Scan0;
-                byte[] inputLine = new byte[inputData.Stride];
-                bool odd = false;
-                bool dither = false;
-                sbyte error;
-                bool j;
-
-                for (int y = 0; y < maxY; y++, scanLine += inputData.Stride)
+                int lineP;
+                if (odd)
                 {
-                    int lineP;
-                    if (odd)
-                    {
-                        lineP = 0;
-                        lineC = 1;
-                        odd = false;
-                        dither = true;
-                    }
-                    else
-                    {
-                        lineP = 1;
-                        lineC = 0;
-                        odd = true;
-                    }
-                    Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
-
-                    // Convert to greyscale
-                    for (int x = 0; x < maxX; x++)
-                    {
-                        var xpos = x * 3;
-                        data[x, lineC] = (sbyte)(64d * (ColorToByte(inputLine[xpos + 2], inputLine[xpos + 1], inputLine[xpos + 0]) / 255d - 0.5d));
-                    }
-
-                    if (dither)
-                    {
-                        // Dither to monochrome 8 pixels per byte using Floyd-Steinberg
-                        Array.Clear(output, 0, outputStride);
-                        for (int x = 0; x < maxX; x++)
-                        {
-                            j = data[x, lineP] > 0;
-                            if (j)
-                            {
-                                output[x / 8] |= masks[x % 8];
-                            }
-
-                            error = (sbyte)(data[x, lineP] - (j ? 32 : -32));
-                            if (x < maxX - 1)
-                            {
-                                data[x + 1, lineP] += (sbyte)(7 * error / 16);
-                            }
-
-                            if (x > 0)
-                            {
-                                data[x - 1, lineC] += (sbyte)(3 * error / 16);
-                            }
-
-                            data[x, lineC] += (sbyte)(5 * error / 16);
-                            if (x < maxX - 1)
-                            {
-                                data[x + 1, lineC] += (sbyte)(1 * error / 16);
-                            }
-                        }
-                        SendData(output);
-                    }
+                    lineP = 0;
+                    lineC = 1;
+                    odd = false;
+                    dither = true;
                 }
+                else
+                {
+                    lineP = 1;
+                    lineC = 0;
+                    odd = true;
+                }
+                Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
 
-                Array.Clear(output, 0, outputStride);
+                // Convert to greyscale
                 for (int x = 0; x < maxX; x++)
                 {
-                    j = data[x, lineC] > 0;
-                    if (j)
-                    {
-                        output[x / 8] |= masks[x % 8];
-                    }
-
-                    error = (sbyte)(data[x, lineC] - (j ? 32 : -32));
-                    if (x < maxX - 1)
-                    {
-                        data[x + 1, lineC] += (sbyte)(7 * error / 16);
-                    }
+                    var xpos = x * ColorBytesPerPixel;
+                    data[x, lineC] = (sbyte)(64d * (ColorToByte(inputLine[xpos + 2], inputLine[xpos + 1], inputLine[xpos + 0]) / 255d - 0.5d));
                 }
 
-                SendData(output);
-                if (maxY < Height)
+                if (dither)
                 {
+                    // Dither to monochrome 8 pixels per byte using Floyd-Steinberg
                     Array.Clear(output, 0, outputStride);
-                    for (int y = maxY; y < Height; y++)
+                    for (int x = 0; x < maxX; x++)
                     {
-                        SendData(output);
+                        j = data[x, lineP] > 0;
+                        if (j)
+                        {
+                            output[x / 8] |= masks[x % 8];
+                        }
+
+                        error = (sbyte)(data[x, lineP] - (j ? 32 : -32));
+                        if (x < maxX - 1)
+                        {
+                            data[x + 1, lineP] += (sbyte)(7 * error / 16);
+                        }
+
+                        if (x > 0)
+                        {
+                            data[x - 1, lineC] += (sbyte)(3 * error / 16);
+                        }
+
+                        data[x, lineC] += (sbyte)(5 * error / 16);
+                        if (x < maxX - 1)
+                        {
+                            data[x + 1, lineC] += (sbyte)(1 * error / 16);
+                        }
                     }
+                    SendData(output);
                 }
             }
-            finally
+
+            Array.Clear(output, 0, outputStride);
+            for (int x = 0; x < maxX; x++)
             {
-                image.UnlockBits(inputData);
+                j = data[x, lineC] > 0;
+                if (j)
+                {
+                    output[x / 8] |= masks[x % 8];
+                }
+
+                error = (sbyte)(data[x, lineC] - (j ? 32 : -32));
+                if (x < maxX - 1)
+                {
+                    data[x + 1, lineC] += (sbyte)(7 * error / 16);
+                }
+            }
+
+            SendData(output);
+            if (maxY < Height)
+            {
+                Array.Clear(output, 0, outputStride);
+                for (int y = maxY; y < Height; y++)
+                {
+                    SendData(output);
+                }
             }
         }
 
@@ -357,10 +346,10 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// Fill the screen with a color
         /// </summary>
         /// <param name="command">Start Data Transmission Command</param>
-        /// <param name="color">Color to fill the screen</param>
-        private void FillColor(Epd7In5_V2Commands command, Color color)
+        /// <param name="rgb">Color to fill the screen</param>
+        private void FillColor(Epd7In5_V2Commands command, byte[] rgb)
         {
-            var outputLine = GetColoredLineOnDevice(color);
+            var outputLine = GetColoredLineOnDevice(rgb);
 
             SendCommand(command);
 

@@ -26,72 +26,53 @@
 #region Usings
 
 using System;
+using SkiaSharp;
+using Waveshare.Interfaces;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Image.SKBitmap
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// SKBitmap Loader
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    // ReSharper disable once InconsistentNaming
+    internal class SKBitmapLoader : EPaperImageBase<SkiaSharp.SKBitmap>
     {
-        /// <summary>
-        /// Pixel Width of the Display
-        /// </summary>
-        int Width { get; }
+
+        //########################################################################################
+
+        #region Constructor / Dispose / Finalizer
+
+        public SKBitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
+        {
+        }
+
+        #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
+        #region Protected Methods
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Load the SKBitmap into a RAWImage
         /// </summary>
-        int Height { get; }
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected override IRawImage LoadImage(SkiaSharp.SKBitmap image)
+        {
+            var maxWith = Math.Min(Width, image.Width);
+            var maxHeight = Math.Min(Height, image.Height);
 
-        /// <summary>
-        /// Wait until the display is ready
-        /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+            var subSet = new SkiaSharp.SKBitmap();
+            image.ExtractSubset(subSet, new SKRectI(0, 0, maxWith, maxHeight));
 
-        /// <summary>
-        /// Wait until the display is ready
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
+            return new SKBitmapRawImage(subSet);
+        }
 
-        /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOn();
+        #endregion Protected Methods
 
-        /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOff();
+        //########################################################################################
 
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
     }
 }

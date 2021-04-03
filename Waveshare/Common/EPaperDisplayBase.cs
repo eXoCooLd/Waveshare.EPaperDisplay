@@ -29,7 +29,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Device.Gpio;
 using System.Diagnostics;
-using System.Drawing;
 using System.Threading;
 using Waveshare.Interfaces;
 
@@ -52,13 +51,8 @@ namespace Waveshare.Common
         /// </summary>
         private const int WaitUntilReadyTimeout = 50000;
 
-        /// <summary>
-        /// Color Bytes per Pixel (R, G, B)
-        /// </summary>
-        protected const int ColorBytesPerPixel = 3;
-
         #endregion Constants
-        
+
         //########################################################################################
 
         #region Fields
@@ -80,6 +74,21 @@ namespace Waveshare.Common
         #region Properties
 
         /// <summary>
+        /// Pixel Width of the Display
+        /// </summary>
+        public abstract int Width { get; }
+
+        /// <summary>
+        /// Pixel Height of the Display
+        /// </summary>
+        public abstract int Height { get; }
+
+        /// <summary>
+        /// Color Bytes per Pixel (R, G, B)
+        /// </summary>
+        public int ColorBytesPerPixel { get; set; } = 3;
+
+        /// <summary>
         /// Default white scan line on the device
         /// </summary>
         private ReadOnlyCollection<byte> WhiteLineOnDevice => m_WhiteLineOnDevice ?? (m_WhiteLineOnDevice = GetWhiteLineOnDevice());
@@ -93,7 +102,7 @@ namespace Waveshare.Common
             {
                 if (!m_WhitePixelBlockOnDevice.HasValue)
                 {
-                    m_WhitePixelBlockOnDevice = GetMergedPixelDataInByte(Color.White);
+                    m_WhitePixelBlockOnDevice = GetMergedPixelDataInByte(ByteColors.White);
                 }
 
                 return m_WhitePixelBlockOnDevice.Value;
@@ -109,16 +118,6 @@ namespace Waveshare.Common
         /// E-Paper Hardware Interface for GPIO and SPI Bus
         /// </summary>
         public IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
-
-        /// <summary>
-        /// Pixel Width of the Display
-        /// </summary>
-        public abstract int Width { get; }
-
-        /// <summary>
-        /// Pixel Height of the Display
-        /// </summary>
-        public abstract int Height { get; }
 
         /// <summary>
         /// Get Status Command
@@ -226,11 +225,13 @@ namespace Waveshare.Common
         /// <summary>
         /// Display a Image on the Display
         /// </summary>
-        /// <param name="image">Bitmap that should be displayed</param>
-        public void DisplayImage(Bitmap image)
+        /// <param name="rawImage">Bitmap that should be displayed</param>
+        public void DisplayImage(IRawImage rawImage)
         {
             SendCommand(StartDataTransmissionCommand);
-            SendBitmapToDevice(image);
+
+            SendBitmapToDevice(rawImage.ScanLine, rawImage.Stride, rawImage.Width, rawImage.Height);
+
             SendCommand(StopDataTransmissionCommand);
 
             TurnOnDisplay();
@@ -337,11 +338,24 @@ namespace Waveshare.Common
         /// <summary>
         /// Get a colored scan line on the device
         /// </summary>
-        /// <param name="color"></param>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
         /// <returns></returns>
-        protected byte[] GetColoredLineOnDevice(Color color)
+        protected byte[] GetColoredLineOnDevice(byte r, byte g, byte b)
         {
-            var devicePixel = GetMergedPixelDataInByte(color);
+            return GetColoredLineOnDevice(new []{r, g, b});
+        }
+
+
+        /// <summary>
+        /// Get a colored scan line on the device
+        /// </summary>
+        /// <param name="rgb"></param>
+        /// <returns></returns>
+        protected byte[] GetColoredLineOnDevice(byte[] rgb)
+        {
+            var devicePixel = GetMergedPixelDataInByte(rgb);
 
             var outputWidth = Width / PixelPerByte;
             var outputLine = new byte[outputWidth];
@@ -431,12 +445,6 @@ namespace Waveshare.Common
         #region Internal Methods
 
         /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="image">Bitmap to convert</param>
-        internal abstract void SendBitmapToDevice(Bitmap image);
-
-        /// <summary>
         /// Merge pixels into a Device Byte
         /// </summary>
         /// <param name="pixel"></param>
@@ -467,6 +475,15 @@ namespace Waveshare.Common
             return output;
         }
 
+        /// <summary>
+        /// Send a Bitmap as Byte Array to the Device
+        /// </summary>
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal abstract void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY);
+
         #endregion Internal Methods
 
         //########################################################################################
@@ -492,17 +509,22 @@ namespace Waveshare.Common
         /// <returns></returns>
         private ReadOnlyCollection<byte> GetWhiteLineOnDevice()
         {
-            return new ReadOnlyCollection<byte>(GetColoredLineOnDevice(Color.White));
+            return new ReadOnlyCollection<byte>(GetColoredLineOnDevice(ByteColors.White));
         }
 
         /// <summary>
         /// Get a byte on the device with one Color for all pixels
         /// </summary>
-        /// <param name="color"></param>
+        /// <param name="rgb"></param>
         /// <returns></returns>
-        private byte GetMergedPixelDataInByte(Color color)
+        private byte GetMergedPixelDataInByte(byte[] rgb)
         {
-            var pixelData = ColorToByte(color.R, color.G, color.B);
+            if (rgb == null || rgb.Length > 3)
+            {
+                throw new ArgumentException($"The Bytearray {nameof(rgb)} can not be null and its length has to be {ColorBytesPerPixel} or grater but is {rgb?.Length}");
+            }
+
+            var pixelData = ColorToByte(rgb[0], rgb[1], rgb[2]);
             var deviceBytesPerPixel = new byte[PixelPerByte];
 
             for (var i = 0; i < deviceBytesPerPixel.Length; i++)
@@ -516,5 +538,6 @@ namespace Waveshare.Common
         #endregion Private Methods
 
         //########################################################################################
+
     }
 }

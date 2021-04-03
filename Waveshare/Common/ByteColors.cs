@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,35 +23,21 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-using System;
-
-namespace Waveshare.Interfaces
+namespace Waveshare.Common
 {
     /// <summary>
-    /// Internal Interface to initialize with the Hardware Interface for GPIO and SPI Bus
+    /// Colors as ByteArrays
     /// </summary>
-    internal interface IEPaperDisplayInternal : IEPaperDisplay
+    internal class ByteColors
     {
         /// <summary>
-        /// Color Bytes per Pixel (R, G, B)
+        /// Color White as ByteArray
         /// </summary>
-        int ColorBytesPerPixel { get; set; }
+        public static readonly byte[] White = new byte[] { 255, 255, 255 };
 
         /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// Color Black as ByteArray
         /// </summary>
-        IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
-
-        /// <summary>
-        /// Initialize the Display with the Hardware Interface
-        /// </summary>
-        /// <param name="ePaperDisplayHardware">Hardware Interface for GPIO and SPI Bus</param>
-        void Initialize(IEPaperDisplayHardware ePaperDisplayHardware);
-
-        /// <summary>
-        /// Display a Image on the Display
-        /// </summary>
-        /// <param name="rawImage">Bitmap that should be displayed</param>
-        void DisplayImage(IRawImage rawImage);
+        public static readonly byte[] Black = new byte[] { 0, 0, 0 };
     }
 }

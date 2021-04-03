@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,66 +32,33 @@ using System;
 namespace Waveshare.Interfaces
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// Interface for the RAW Image that should be displayed
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal interface IRawImage : IDisposable
     {
         /// <summary>
-        /// Pixel Width of the Display
+        /// Width of the Image or Device Width
         /// </summary>
         int Width { get; }
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Height of the Image or Device Height
         /// </summary>
         int Height { get; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Length of a ScanLine in Bytes
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        int Stride { get; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Used Bytes per Pixel
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
+        int BytesPerPixel { get; }
 
         /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
+        /// IntPointer to the Byte Array of the Image
         /// </summary>
-        void PowerOn();
-
-        /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOff();
-
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
+        IntPtr ScanLine { get; }
     }
 }

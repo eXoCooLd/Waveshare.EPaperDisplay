@@ -26,8 +26,6 @@
 #region Usings
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -89,7 +87,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void Clear()
         {
-            FillColor(Color.White);
+            FillColor(ByteColors.White);
             TurnOnDisplay();
         }
 
@@ -98,7 +96,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void ClearBlack()
         {
-            FillColor(Color.Black);
+            FillColor(ByteColors.Black);
             TurnOnDisplay();
         }
 
@@ -229,44 +227,34 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Send a Bitmap as Byte Array to the Device
         /// </summary>
-        /// <param name="image">Bitmap image to convert</param>
-        internal override void SendBitmapToDevice(Bitmap image)
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
         {
-            var maxX = Math.Min(Width, image.Width);
-            var maxY = Math.Min(Height, image.Height);
+            var deviceLineWithInByte = Width * ColorBytesPerPixel;
+            var deviceStep = ColorBytesPerPixel * PixelPerByte;
 
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            var bytesPerPixelInImage = inputData.Stride / image.Width;
-            var deviceLineWithInByte = Width * bytesPerPixelInImage;
-            var deviceStep = bytesPerPixelInImage * PixelPerByte;
-
-            try
+            var line = new byte[stride];
+            
+            for (var y = 0; y < Height; y++)
             {
-                var scanLine = inputData.Scan0;
-                var line = new byte[inputData.Stride];
-                
-                for (var y = 0; y < Height; y++)
+                var outputLine = CloneWhiteScanLine();
+
+                if (y < maxY)
                 {
-                    var outputLine = CloneWhiteScanLine();
+                    Marshal.Copy(scanLine, line, 0, line.Length);
 
-                    if (y < maxY)
+                    for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                     {
-                        Marshal.Copy(scanLine, line, 0, line.Length);
-
-                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
-                        {
-                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                        }
-
-                        scanLine += inputData.Stride;
+                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
                     }
 
-                    SendData(outputLine);
+                    scanLine += stride;
                 }
-            }
-            finally
-            {
-                image.UnlockBits(inputData);
+
+                SendData(outputLine);
             }
         }
 
@@ -288,10 +276,10 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Fill the screen with a color
         /// </summary>
-        /// <param name="color">Color to fill the screen</param>
-        private void FillColor(Color color)
+        /// <param name="rgb">Color to fill the screen</param>
+        private void FillColor(byte[] rgb)
         {
-            var outputLine = GetColoredLineOnDevice(color);
+            var outputLine = GetColoredLineOnDevice(rgb);
 
             SendCommand(StartDataTransmissionCommand);
 
