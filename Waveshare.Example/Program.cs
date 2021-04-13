@@ -111,9 +111,7 @@ namespace Waveshare.Example
         {
             get
             {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                var uri = new UriBuilder(codeBase);
-                var path = Uri.UnescapeDataString(uri.Path);
+                var path = Assembly.GetExecutingAssembly().Location;
                 return Path.GetDirectoryName(path);
             }
         }
