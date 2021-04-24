@@ -334,6 +334,13 @@ namespace Waveshare.Common
             return r == g && g == b;
         }
 
+        /// <summary>
+        /// Check if a Pixel is Red
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
         protected static bool IsRed(byte r, byte g, byte b)
         {
             return r > (g + 20) && r > (b + 20);

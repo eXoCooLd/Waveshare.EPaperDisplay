@@ -26,12 +26,8 @@
 #region Usings
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -95,16 +91,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
         public override void Clear()
         {
             FillColor(Epd7In5b_V2Commands.DataStartTransmission1, Color.White);
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission2, Color.Black);
-            TurnOnDisplay();
-        }
-
-        /// <summary>
-        /// Clear the Display to Red
-        /// </summary>
-        public void ClearRed()
-        {
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission1, Color.White);
             FillColor(Epd7In5b_V2Commands.DataStartTransmission2, Color.White);
             TurnOnDisplay();
         }
@@ -164,21 +150,34 @@ namespace Waveshare.Devices.Epd7in5b_V2
         {
             SeparateColors(image, out var bw, out var red);
 
-            SendCommand(Epd7In5b_V2Commands.DataStartTransmission1);
-            SendBitmapToDevice(bw);
-            SendCommand(Epd7In5b_V2Commands.DataStartTransmission2);
-            SendBitmapToDevice(red);
+            using (bw)
+            {
+                SendCommand(Epd7In5b_V2Commands.DataStartTransmission1);
+                SendBitmapToDevice(bw);
+            }
+
+            using (red)
+            {
+                SendCommand(Epd7In5b_V2Commands.DataStartTransmission2);
+                SendBitmapToDevice(red);
+            }
 
             TurnOnDisplay();
         }
 
-        private void SeparateColors(Bitmap image, out Bitmap image_bw, out Bitmap image_red)
+        /// <summary>
+        /// Separate Image into Black and Red Image
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="imageBw"></param>
+        /// <param name="imageRed"></param>
+        private void SeparateColors(Bitmap image, out Bitmap imageBw, out Bitmap imageRed)
         {
             int width = image.Width;
             int height = image.Height;
 
-            image_bw = new Bitmap(width, height);
-            image_red = new Bitmap(width, height);
+            imageBw = new Bitmap(width, height);
+            imageRed = new Bitmap(width, height);
 
             for (int y = 0; y < height; y++)
             {
@@ -188,97 +187,16 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
                      if(IsRed(pixel.R, pixel.G, pixel.B))
                     {
-                        image_red.SetPixel(x, y, pixel);
-                        image_bw.SetPixel(x, y, Color.White);
+                        imageRed.SetPixel(x, y, pixel);
+                        imageBw.SetPixel(x, y, Color.White);
                     }
                     else
                     {
-                        image_bw.SetPixel(x, y, pixel);
-                        image_red.SetPixel(x, y, Color.Black);
+                        imageBw.SetPixel(x, y, pixel);
+                        imageRed.SetPixel(x, y, Color.Black);
                     }
                 }
             }
-
-            image_bw.Save("test_bw.bmp");
-            image_red.Save("test_red.bmp");
-        }
-
-        private byte[,] ConvertBitmapToByteArray(Bitmap image)
-        {
-            Stopwatch stopWatch = Stopwatch.StartNew();
-            int maxX = Math.Min(Width, image.Width);
-            int maxY = Math.Min(Height, image.Height);
-
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            byte[,] output = new byte[2, inputData.Stride * Height];
-
-            try
-            {
-                IntPtr pointer = inputData.Scan0;
-                int stride = inputData.Stride;
-                int length = inputData.Stride * Height;
-                int index = 0;
-                int bytecount = 0;
-
-                byte currentByte_white = 0x00;
-                byte currentByte_red = 0x00;
-
-                byte[] values = new byte[length];
-
-                Marshal.Copy(pointer, values, 0, length);
-
-                for (int row = 0; row < Height; row++)
-                {
-                    for (int column = 0; column < Width; column++)
-                    {
-                        var pixel_r = values[(column * 3) + (row * stride) + 2];
-                        var pixel_g = values[(column * 3) + (row * stride) + 1];
-                        var pixel_b = values[(column * 3) + (row * stride)];
-
-                        var pixel = ColorToByte(pixel_r, pixel_g, pixel_b);
-
-                        
-
-                     //switch (pixel)
-                     //{
-                     //    case Epd7in5b_V2Colors.White:
-                     //        currentByte_white |= (byte)(1 << (7 - index));
-                     //        break;
-                     //    case Epd7in5b_V2Colors.Red:
-                     //        currentByte_red |= (byte)(1 << (7 - index));
-                     //        break;
-                     //}
-
-                        if(index == 7)
-                        {
-                            index = 0;
-
-                            output[0, bytecount] = currentByte_white;
-                            output[1, bytecount] = currentByte_red;
-
-
-                            currentByte_white = 0x00;
-                            currentByte_red = 0x00;
-                        }
-                        else
-                        {
-                            index++;
-                        }
-                    }
-                }
-            }
-            catch(Exception exception)
-            {
-                Console.WriteLine(exception.Message);
-                return null;
-            }
-            finally
-            {
-                image.UnlockBits(inputData);
-            }
-
-            Console.WriteLine("Converting Image: " + stopWatch.Elapsed);
-            return output;
         }
 
         #endregion Public Methods
@@ -346,8 +264,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
             DeviceWaitUntilReady();
         }
 
-
-
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
@@ -364,6 +280,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
             return (byte)(byte.MinValue + (r * 0.299 + g * 0.587 + b * 0.114));
         }
+
         #endregion Protected Methods
 
         //########################################################################################
