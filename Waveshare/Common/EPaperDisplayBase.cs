@@ -287,6 +287,19 @@ namespace Waveshare.Common
             DeviceInitialize();
         }
 
+        /// <summary>
+        /// Display a Image on the Display
+        /// </summary>
+        /// <param name="image">Bitmap that should be displayed</param>
+        public virtual void DisplayImage(Bitmap image)
+        {
+            SendCommand(StartDataTransmissionCommand);
+            SendBitmapToDevice(image);
+            SendCommand(StopDataTransmissionCommand);
+
+            TurnOnDisplay();
+        }
+
         #endregion Public Methods
 
         //########################################################################################
@@ -339,6 +352,18 @@ namespace Waveshare.Common
         protected static bool IsMonochrom(byte r, byte g, byte b)
         {
             return r == g && g == b;
+        }
+
+        /// <summary>
+        /// Check if a Pixel is Red
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="g"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        protected static bool IsRed(byte r, byte g, byte b)
+        {
+            return r > (g + 20) && r > (b + 20);
         }
 
         /// <summary>

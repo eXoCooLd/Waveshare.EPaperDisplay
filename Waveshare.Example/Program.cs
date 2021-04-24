@@ -58,7 +58,7 @@ namespace Waveshare.Example
                 return;
             }
 
-            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
+            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5b_V2);
 
             ePaperDisplay.Clear();
             ePaperDisplay.WaitUntilReady();
@@ -87,7 +87,7 @@ namespace Waveshare.Example
 
             if (args == null || args.Length == 0)
             {
-                const string fileName = "like_a_sir_640x384.bmp";
+                const string fileName = "like_a_sir_800x480.bmp";
                 bitmapFilePath = Path.Combine(ExecutingAssemblyPath, fileName);
             }
             else
