@@ -30,6 +30,7 @@ using System.Runtime.CompilerServices;
 using Waveshare.Common;
 using Waveshare.Devices;
 using Waveshare.Devices.Epd7in5_V2;
+using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Devices.Epd7in5bc;
 using Waveshare.Interfaces;
 
@@ -76,6 +77,9 @@ namespace Waveshare
                     break;
                 case EPaperDisplayType.WaveShare7In5_V2:
                     display = new Epd7In5_V2();
+                    break;
+                case EPaperDisplayType.WaveShare7In5b_V2:
+                    display = new Epd7In5b_V2();
                     break;
                 default:
                     display = null;
