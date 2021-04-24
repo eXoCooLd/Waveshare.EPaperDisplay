@@ -14,7 +14,7 @@ Specification from:
 - https://www.waveshare.com/w/upload/4/44/7.5inch_e-Paper_B_V2_Specification.pdf
 
 C Example Code from:
-https://github.com/waveshare/e-Paper/tree/master/RaspberryPi%26JetsonNano/c
+https://github.com/waveshare/e-Paper/tree/master/RaspberryPi_JetsonNano/c
 
 ## NuGet Package:
 
