@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -61,6 +62,11 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// Pixel Height of the Display
         /// </summary>
         public override int Height { get; } = 480;
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public override IList<byte[]> SupportedByteColors { get; } = new List<byte[]> { ByteColors.White, ByteColors.Black };
 
         /// <summary>
         /// Get Status Command
@@ -230,100 +236,28 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <param name="maxY">Max Pixels Vertical</param>
         internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
         {
-            sbyte[,] data = new sbyte[maxX, 2];
-            byte[] masks = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-            int outputStride = Width / PixelPerByte;
-            byte[] output = new byte[outputStride];
-            int lineC = 0;
+            var deviceLineWithInByte = Width * ColorBytesPerPixel;
+            var deviceStep = ColorBytesPerPixel * PixelPerByte;
 
-            byte[] inputLine = new byte[stride];
-            bool odd = false;
-            bool dither = false;
-            sbyte error;
-            bool j;
+            var line = new byte[stride];
 
-            for (int y = 0; y < maxY; y++, scanLine += stride)
+            for (var y = 0; y < Height; y++)
             {
-                int lineP;
-                if (odd)
-                {
-                    lineP = 0;
-                    lineC = 1;
-                    odd = false;
-                    dither = true;
-                }
-                else
-                {
-                    lineP = 1;
-                    lineC = 0;
-                    odd = true;
-                }
-                Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
+                var outputLine = CloneWhiteScanLine();
 
-                // Convert to greyscale
-                for (int x = 0; x < maxX; x++)
+                if (y < maxY)
                 {
-                    var xpos = x * ColorBytesPerPixel;
-                    data[x, lineC] = (sbyte)(64d * (ColorToByte(inputLine[xpos + 2], inputLine[xpos + 1], inputLine[xpos + 0]) / 255d - 0.5d));
-                }
+                    Marshal.Copy(scanLine, line, 0, line.Length);
 
-                if (dither)
-                {
-                    // Dither to monochrome 8 pixels per byte using Floyd-Steinberg
-                    Array.Clear(output, 0, outputStride);
-                    for (int x = 0; x < maxX; x++)
+                    for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                     {
-                        j = data[x, lineP] > 0;
-                        if (j)
-                        {
-                            output[x / 8] |= masks[x % 8];
-                        }
-
-                        error = (sbyte)(data[x, lineP] - (j ? 32 : -32));
-                        if (x < maxX - 1)
-                        {
-                            data[x + 1, lineP] += (sbyte)(7 * error / 16);
-                        }
-
-                        if (x > 0)
-                        {
-                            data[x - 1, lineC] += (sbyte)(3 * error / 16);
-                        }
-
-                        data[x, lineC] += (sbyte)(5 * error / 16);
-                        if (x < maxX - 1)
-                        {
-                            data[x + 1, lineC] += (sbyte)(1 * error / 16);
-                        }
+                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
                     }
-                    SendData(output);
-                }
-            }
 
-            Array.Clear(output, 0, outputStride);
-            for (int x = 0; x < maxX; x++)
-            {
-                j = data[x, lineC] > 0;
-                if (j)
-                {
-                    output[x / 8] |= masks[x % 8];
+                    scanLine += stride;
                 }
 
-                error = (sbyte)(data[x, lineC] - (j ? 32 : -32));
-                if (x < maxX - 1)
-                {
-                    data[x + 1, lineC] += (sbyte)(7 * error / 16);
-                }
-            }
-
-            SendData(output);
-            if (maxY < Height)
-            {
-                Array.Clear(output, 0, outputStride);
-                for (int y = maxY; y < Height; y++)
-                {
-                    SendData(output);
-                }
+                SendData(outputLine);
             }
         }
 

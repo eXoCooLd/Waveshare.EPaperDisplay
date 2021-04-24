@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Device.Gpio;
 using System.Diagnostics;
@@ -82,6 +83,11 @@ namespace Waveshare.Common
         /// Pixel Height of the Display
         /// </summary>
         public abstract int Height { get; }
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public abstract IList<byte[]> SupportedByteColors { get; }
 
         /// <summary>
         /// Color Bytes per Pixel (R, G, B)

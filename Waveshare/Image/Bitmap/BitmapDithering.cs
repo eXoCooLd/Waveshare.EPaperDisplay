@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,85 +25,75 @@
 
 #region Usings
 
-using System;
+using System.Collections.Generic;
 using System.Drawing;
-using Waveshare.Common;
-using Waveshare.Devices;
-using Waveshare.Devices.Epd7in5_V2;
-using Waveshare.Devices.Epd7in5bc;
-using Waveshare.Image.Bitmap;
-using Waveshare.Interfaces;
+using System.Linq;
+using KGySoft.Drawing;
+using KGySoft.Drawing.Imaging;
 
 #endregion Usings
 
-namespace Waveshare
+namespace Waveshare.Image.Bitmap
 {
     /// <summary>
-    /// E-Paper Display Factory
+    /// Wrapper for Image Dithering with list of supported colors
     /// </summary>
-    public static class EPaperDisplay
+    internal class BitmapDithering
     {
 
         //########################################################################################
 
-        #region Properties
+        #region Properies
 
         /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// Array with all supported colors of the device
         /// </summary>
-        internal static Lazy<IEPaperDisplayHardware> EPaperDisplayHardware { get; set; } = new Lazy<IEPaperDisplayHardware>(() => new EPaperDisplayHardware());
+        private Color[] SupportedColors { get; }
 
-        #endregion Properties
+        /// <summary>
+        /// Used Quantizer for color reduction in the dithering
+        /// </summary>
+        private IQuantizer Quantizer { get; }
+
+        /// <summary>
+        /// Used dithering algorithm
+        /// </summary>
+        private IDitherer Ditherer { get; }
+
+        #endregion Properies
+
+        //########################################################################################
+
+        #region Constructor / Dispose / Finalizer
+
+        /// <summary>
+        /// Constructor with all supported Colors as byte arrays
+        /// </summary>
+        /// <param name="supportedByteColors"></param>
+        public BitmapDithering(IList<byte[]> supportedByteColors)
+        {
+            SupportedColors = supportedByteColors.Select(c => Color.FromArgb(c[0], c[1], c[2])).ToArray();
+            Quantizer = PredefinedColorsQuantizer.FromCustomPalette(SupportedColors);
+            Ditherer = ErrorDiffusionDitherer.FloydSteinberg;
+        }
+
+        #endregion Constructor / Dispose / Finalizer
 
         //########################################################################################
 
         #region Public Methods
 
         /// <summary>
-        /// Create a instance of a E-Paper Display
+        /// Image dithering method
         /// </summary>
-        /// <param name="displayType"></param>
+        /// <param name="input"></param>
         /// <returns></returns>
-        public static IEPaperDisplayImage<Bitmap> Create(EPaperDisplayType displayType)
+        public System.Drawing.Bitmap Dither(System.Drawing.Bitmap input)
         {
-            var ePaperDisplay = CreateEPaperDisplay(displayType);
-            return ePaperDisplay != null ? new BitmapLoader(ePaperDisplay) : null;
+            return input.ConvertPixelFormat(Quantizer.PixelFormatHint, Quantizer, Ditherer);
         }
 
         #endregion Public Methods
-
-        //########################################################################################
-
-        #region Private Methods
-
-        /// <summary>
-        /// Create a instance of a internal E-Paper Display
-        /// </summary>
-        /// <param name="displayType"></param>
-        /// <returns></returns>
-        private static IEPaperDisplayInternal CreateEPaperDisplay(EPaperDisplayType displayType)
-        {
-            IEPaperDisplayInternal display;
-
-            switch (displayType)
-            {
-                case EPaperDisplayType.WaveShare7In5Bc:
-                    display = new Epd7In5Bc();
-                    break;
-                case EPaperDisplayType.WaveShare7In5_V2:
-                    display = new Epd7In5_V2();
-                    break;
-                default:
-                    display = null;
-                    break;
-            }
-
-            display?.Initialize(EPaperDisplayHardware.Value);
-
-            return display;
-        }
-
-        #endregion Private Methods
 
         //########################################################################################
 

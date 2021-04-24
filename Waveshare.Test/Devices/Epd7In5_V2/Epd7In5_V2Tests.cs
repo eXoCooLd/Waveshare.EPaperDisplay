@@ -35,7 +35,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5_V2;
-using Waveshare.Image.SKBitmap;
+using Waveshare.Image.Bitmap;
 using Waveshare.Interfaces;
 
 #endregion Usings
@@ -282,9 +282,8 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new SKBitmapLoader(result);
-            var skBitmap = CommonTestData.ToSkBitmap(image);
-            bitmapEPaperDisplay.DisplayImage(skBitmap);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -311,9 +310,8 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new SKBitmapLoader(result);
-            var skBitmap = CommonTestData.ToSkBitmap(image);
-            bitmapEPaperDisplay.DisplayImage(skBitmap);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -415,111 +413,41 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         /// <param name="image">Bitmap image to convert</param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        internal byte[] SendBitmapToDevice(Bitmap image, int width, int height)
+        internal static byte[] SendBitmapToDevice(Bitmap image, int width, int height)
         {
             var outputArray = new List<Byte>();
 
             const int pixelPerByte = 8;
             int maxX = Math.Min(width, image.Width);
             int maxY = Math.Min(height, image.Height);
-            sbyte[,] data = new sbyte[maxX, 2];
-            byte[] masks = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-            int outputStride = width / pixelPerByte;
-            byte[] output = new byte[outputStride];
-            int lineC = 0;
 
             var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
             try
             {
+                var colorBytesPerPixel = inputData.Stride / inputData.Width;
+                var deviceLineWithInByte = inputData.Width * colorBytesPerPixel;
+                var deviceStep = colorBytesPerPixel * pixelPerByte;
+
                 IntPtr scanLine = inputData.Scan0;
-                byte[] inputLine = new byte[inputData.Stride];
-                bool odd = false;
-                bool dither = false;
-                sbyte error;
-                bool j;
+                byte[] line = new byte[inputData.Stride];
 
-                for (int y = 0; y < maxY; y++, scanLine += inputData.Stride)
+                for (var y = 0; y < height; y++)
                 {
-                    int lineP;
-                    if (odd)
-                    {
-                        lineP = 0;
-                        lineC = 1;
-                        odd = false;
-                        dither = true;
-                    }
-                    else
-                    {
-                        lineP = 1;
-                        lineC = 0;
-                        odd = true;
-                    }
-                    Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
+                    var outputLine = CloneWhiteScanLine(width/pixelPerByte);
 
-                    // Convert to greyscale
-                    for (int x = 0; x < maxX; x++)
+                    if (y < maxY)
                     {
-                        var xpos = x * 3;
-                        data[x, lineC] = (sbyte)(64d * (ColorToByte(inputLine[xpos + 2], inputLine[xpos + 1], inputLine[xpos + 0]) / 255d - 0.5d));
-                    }
+                        Marshal.Copy(scanLine, line, 0, line.Length);
 
-                    if (dither)
-                    {
-                        // Dither to monochrome 8 pixels per byte using Floyd-Steinberg
-                        Array.Clear(output, 0, outputStride);
-                        for (int x = 0; x < maxX; x++)
+                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                         {
-                            j = data[x, lineP] > 0;
-                            if (j)
-                            {
-                                output[x / 8] |= masks[x % 8];
-                            }
-
-                            error = (sbyte)(data[x, lineP] - (j ? 32 : -32));
-                            if (x < maxX - 1)
-                            {
-                                data[x + 1, lineP] += (sbyte)(7 * error / 16);
-                            }
-
-                            if (x > 0)
-                            {
-                                data[x - 1, lineC] += (sbyte)(3 * error / 16);
-                            }
-
-                            data[x, lineC] += (sbyte)(5 * error / 16);
-                            if (x < maxX - 1)
-                            {
-                                data[x + 1, lineC] += (sbyte)(1 * error / 16);
-                            }
+                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
                         }
-                        outputArray.AddRange(output);
-                    }
-                }
 
-                Array.Clear(output, 0, outputStride);
-                for (int x = 0; x < maxX; x++)
-                {
-                    j = data[x, lineC] > 0;
-                    if (j)
-                    {
-                        output[x / 8] |= masks[x % 8];
+                        scanLine += inputData.Stride;
                     }
 
-                    error = (sbyte)(data[x, lineC] - (j ? 32 : -32));
-                    if (x < maxX - 1)
-                    {
-                        data[x + 1, lineC] += (sbyte)(7 * error / 16);
-                    }
-                }
-
-                outputArray.AddRange(output);
-                if (maxY < height)
-                {
-                    Array.Clear(output, 0, outputStride);
-                    for (int y = maxY; y < height; y++)
-                    {
-                        outputArray.AddRange(output);
-                    }
+                    outputArray.AddRange(outputLine);
                 }
             }
             finally
@@ -528,6 +456,77 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             }
 
             return outputArray.ToArray();
+        }
+
+        /// <summary>
+        /// Get the byte on the device for the selected pixels
+        /// </summary>
+        /// <param name="xPosition"></param>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        private static byte GetDevicePixels(int xPosition, byte[] line)
+        {
+            var pixels = new byte[8];
+            for (var i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = GetPixelFromArray(line, xPosition, i);
+            }
+
+            return MergePixelDataInByte(pixels);
+        }
+
+        /// <summary>
+        /// Get a empty line on the device
+        /// </summary>
+        /// <param name="inputDataStride"></param>
+        /// <returns></returns>
+        private static byte[] CloneWhiteScanLine(int inputDataStride)
+        {
+            return new byte[inputDataStride];
+        }
+
+        /// <summary>
+        /// Get Pixel from the byte array
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="xPosition"></param>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        private static byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
+        {
+            var pixelWith = 3 * pixel;
+
+            var colorR = xPosition + pixelWith + 2;
+            var colorG = xPosition + pixelWith + 1;
+            var colorB = xPosition + pixelWith + 0;
+
+            if (colorR >= line.Length)
+            {
+                return 0;
+            }
+
+            return ColorToByte(line[colorR], line[colorG], line[colorB]);
+        }
+
+        /// <summary>
+        /// Merge eight DataBytes into one Byte
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <returns></returns>
+        internal static byte MergePixelDataInByte(byte[] pixel)
+        {
+            const int bitsInByte = 8;
+            var bitMoveLength = bitsInByte / 8;
+
+            byte output = 0;
+
+            for (var i = 0; i < pixel.Length; i++)
+            {
+                var moveFactor = bitsInByte - bitMoveLength * (i + 1);
+                output |= (byte)(pixel[i] << moveFactor);
+            }
+
+            return output;
         }
 
         /// <summary>

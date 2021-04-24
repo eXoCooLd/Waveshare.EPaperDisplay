@@ -33,11 +33,21 @@ namespace Waveshare.Common
         /// <summary>
         /// Color White as ByteArray
         /// </summary>
-        public static readonly byte[] White = new byte[] { 255, 255, 255 };
+        public static readonly byte[] White = { 255, 255, 255 };
+
+        /// <summary>
+        /// Color Gray as ByteArray
+        /// </summary>
+        public static readonly byte[] Gray = { 128, 128, 128 };
 
         /// <summary>
         /// Color Black as ByteArray
         /// </summary>
-        public static readonly byte[] Black = new byte[] { 0, 0, 0 };
+        public static readonly byte[] Black = { 0, 0, 0 };
+
+        /// <summary>
+        /// Color Red as ByteArray
+        /// </summary>
+        public static readonly byte[] Red = {255, 0, 0};
     }
 }

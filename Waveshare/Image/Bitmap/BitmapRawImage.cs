@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +26,18 @@
 #region Usings
 
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using Waveshare.Interfaces;
 
 #endregion Usings
 
-namespace Waveshare.Image.SKBitmap
+namespace Waveshare.Image.Bitmap
 {
     /// <summary>
-    /// Wrapper for a SKBitmap into a RAW Image for the E-Paper Display
+    /// RAW Image Wrapper of a Bitmap
     /// </summary>
-    // ReSharper disable once InconsistentNaming
-    internal class SKBitmapRawImage : IRawImage
+    public class BitmapRawImage : IRawImage
     {
 
         //########################################################################################
@@ -49,9 +50,14 @@ namespace Waveshare.Image.SKBitmap
         private IntPtr m_ScanLine;
 
         /// <summary>
-        /// The SKBitmap used for the ScanLine
+        /// The Bitmap used for the ScanLine
         /// </summary>
-        private SkiaSharp.SKBitmap Bitmap { get; set; }
+        private System.Drawing.Bitmap Bitmap { get; set; }
+
+        /// <summary>
+        /// The raw Bitmap Data
+        /// </summary>
+        private BitmapData BitmapData { get; set; }
 
         /// <summary>
         /// Width of the Image or Device Width
@@ -66,12 +72,12 @@ namespace Waveshare.Image.SKBitmap
         /// <summary>
         /// Used Bytes per Pixel
         /// </summary>
-        public int BytesPerPixel => Bitmap.BytesPerPixel;
+        public int BytesPerPixel { get; }
 
         /// <summary>
         /// Length of a ScanLine in Bytes
         /// </summary>
-        public int Stride => Bitmap.Width * Bitmap.BytesPerPixel;
+        public int Stride => Bitmap.Width * BytesPerPixel;
 
         /// <summary>
         /// IntPointer to the Byte Array of the Image
@@ -80,9 +86,9 @@ namespace Waveshare.Image.SKBitmap
         {
             get
             {
-                if (m_ScanLine == IntPtr.Zero)
+                if (m_ScanLine == IntPtr.Zero && BitmapData != null)
                 {
-                    m_ScanLine = Bitmap.GetPixels();
+                    m_ScanLine = BitmapData.Scan0;
                 }
 
                 return m_ScanLine;
@@ -99,9 +105,13 @@ namespace Waveshare.Image.SKBitmap
         /// Constructor with the SKBitmap
         /// </summary>
         /// <param name="bitmap"></param>
-        public SKBitmapRawImage(SkiaSharp.SKBitmap bitmap)
+        /// <param name="maxWidth"></param>
+        /// <param name="maxHeight"></param>
+        public BitmapRawImage(System.Drawing.Bitmap bitmap, int maxWidth, int maxHeight)
         {
             Bitmap = bitmap;
+            BitmapData = bitmap.LockBits(new Rectangle(0, 0, maxWidth, maxHeight), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            BytesPerPixel = BitmapData.Stride / bitmap.Width;
         }
 
         /// <summary>
@@ -109,6 +119,10 @@ namespace Waveshare.Image.SKBitmap
         /// </summary>
         public void Dispose()
         {
+            Bitmap?.UnlockBits(BitmapData);
+            BitmapData = null;
+            m_ScanLine = IntPtr.Zero;
+
             Bitmap?.Dispose();
             Bitmap = null;
         }

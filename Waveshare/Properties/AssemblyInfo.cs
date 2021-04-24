@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,41 +23,11 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-using System;
-using System.Collections.Generic;
+#region Usings
 
-namespace Waveshare.Interfaces
-{
-    /// <summary>
-    /// Internal Interface to initialize with the Hardware Interface for GPIO and SPI Bus
-    /// </summary>
-    internal interface IEPaperDisplayInternal : IEPaperDisplay
-    {
-        /// <summary>
-        /// Color Bytes per Pixel (R, G, B)
-        /// </summary>
-        int ColorBytesPerPixel { get; set; }
+using System.Runtime.CompilerServices;
 
-        /// <summary>
-        /// Supported Colors of the E-Paper Device
-        /// </summary>
-        IList<byte[]> SupportedByteColors { get; }
+#endregion Usings
 
-        /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
-        /// </summary>
-        IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
-
-        /// <summary>
-        /// Initialize the Display with the Hardware Interface
-        /// </summary>
-        /// <param name="ePaperDisplayHardware">Hardware Interface for GPIO and SPI Bus</param>
-        void Initialize(IEPaperDisplayHardware ePaperDisplayHardware);
-
-        /// <summary>
-        /// Display a Image on the Display
-        /// </summary>
-        /// <param name="rawImage">Bitmap that should be displayed</param>
-        void DisplayImage(IRawImage rawImage);
-    }
-}
+[assembly: InternalsVisibleTo("Waveshare.Test")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

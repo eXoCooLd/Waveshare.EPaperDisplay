@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Collections.Generic;
 using Waveshare.Interfaces;
 
 #endregion Usings
@@ -57,6 +58,11 @@ namespace Waveshare.Image
         /// Pixel Height of the Display
         /// </summary>
         public int Height => EPaperDisplay.Height;
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        protected IList<byte[]> SupportedByteColors => EPaperDisplay.SupportedByteColors;
 
         #endregion Properties
 
@@ -161,9 +167,39 @@ namespace Waveshare.Image
         /// Display a Image on the Display
         /// </summary>
         /// <param name="image">Image that should be displayed</param>
+        /// <param name="dithering">Use Dithering</param>
+        public void DisplayImage(T image, bool dithering)
+        {
+            if (dithering)
+            {
+                DisplayImageWithDithering(image);
+            }
+            else
+            {
+                DisplayImage(image);
+            }
+        }
+
+        /// <summary>
+        /// Display a Image on the Display
+        /// </summary>
+        /// <param name="image">Image that should be displayed</param>
         public void DisplayImage(T image)
         {
             using (var rawImage = LoadImage(image))
+            {
+                EPaperDisplay.ColorBytesPerPixel = rawImage.BytesPerPixel;
+                EPaperDisplay.DisplayImage(rawImage);
+            }
+        }
+
+        /// <summary>
+        /// Display Image of a generic Type with dithering
+        /// </summary>
+        /// <param name="image">Image that should be displayed</param>
+        public void DisplayImageWithDithering(T image)
+        {
+            using (var rawImage = LoadImageWithDithering(image))
             {
                 EPaperDisplay.ColorBytesPerPixel = rawImage.BytesPerPixel;
                 EPaperDisplay.DisplayImage(rawImage);
@@ -182,6 +218,13 @@ namespace Waveshare.Image
         /// <param name="image"></param>
         /// <returns></returns>
         protected abstract IRawImage LoadImage(T image);
+
+        /// <summary>
+        /// Load a Image with dithering into the RawImage
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected abstract IRawImage LoadImageWithDithering(T image);
 
         #endregion Protected Methods
 

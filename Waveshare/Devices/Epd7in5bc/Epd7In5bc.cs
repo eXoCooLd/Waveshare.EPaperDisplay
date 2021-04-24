@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -60,6 +61,11 @@ namespace Waveshare.Devices.Epd7in5bc
         /// Pixel Height of the Display
         /// </summary>
         public override int Height { get; } = 384;
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public override IList<byte[]> SupportedByteColors { get; } = new List<byte[]> {ByteColors.White, ByteColors.Gray, ByteColors.Black, ByteColors.Red };
 
         /// <summary>
         /// Get Status Command

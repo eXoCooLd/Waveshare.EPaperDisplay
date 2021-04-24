@@ -25,8 +25,8 @@
 
 #region Usings
 
-using SkiaSharp;
 using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -81,7 +81,7 @@ namespace Waveshare.Example
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        private static SKBitmap LoadBitmap(string[] args)
+        private static Bitmap LoadBitmap(string[] args)
         {
             string bitmapFilePath;
 
@@ -101,13 +101,7 @@ namespace Waveshare.Example
                 return null;
             }
 
-            SKBitmap bitmap;
-            using (var stream = File.OpenRead(bitmapFilePath))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
-
-            return bitmap;
+            return new Bitmap(bitmapFilePath);
         }
 
         /// <summary>
@@ -117,9 +111,7 @@ namespace Waveshare.Example
         {
             get
             {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                var uri = new UriBuilder(codeBase);
-                var path = Uri.UnescapeDataString(uri.Path);
+                var path = Assembly.GetExecutingAssembly().Location;
                 return Path.GetDirectoryName(path);
             }
         }

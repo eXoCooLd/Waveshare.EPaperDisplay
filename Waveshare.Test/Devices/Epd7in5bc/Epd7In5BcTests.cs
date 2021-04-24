@@ -33,7 +33,7 @@ using System.Device.Gpio;
 using System.Drawing;
 using System.Linq;
 using Waveshare.Devices.Epd7in5bc;
-using Waveshare.Image.SKBitmap;
+using Waveshare.Image.Bitmap;
 using Waveshare.Interfaces;
 
 #endregion Usings
@@ -281,9 +281,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new SKBitmapLoader(result);
-            var skBitmap = CommonTestData.ToSkBitmap(image);
-            bitmapEPaperDisplay.DisplayImage(skBitmap);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -312,9 +311,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new SKBitmapLoader(result);
-            var skBitmap = CommonTestData.ToSkBitmap(image);
-            bitmapEPaperDisplay.DisplayImage(skBitmap);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }

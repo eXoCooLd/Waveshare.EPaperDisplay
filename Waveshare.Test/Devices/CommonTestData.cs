@@ -27,7 +27,6 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
-using SkiaSharp;
 
 #endregion Usings
 
@@ -84,27 +83,6 @@ namespace Waveshare.Test.Devices
             }
 
             return image;
-        }
-
-        /// <summary>
-        /// Convert a Bitmap into a SKBitmap
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        public static SKBitmap ToSkBitmap(Bitmap image)
-        {
-            var output = new SKBitmap(new SKImageInfo(image.Width, image.Height));
-
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var pixel = image.GetPixel(x, y);
-                    output.SetPixel(x, y, new SKColor(pixel.R, pixel.G, pixel.B, pixel.A));
-                }
-            }
-
-            return output;
         }
 
         #endregion Public Methods

@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,25 +26,49 @@
 #region Usings
 
 using System;
-using SkiaSharp;
 using Waveshare.Interfaces;
 
 #endregion Usings
 
-namespace Waveshare.Image.SKBitmap
+namespace Waveshare.Image.Bitmap
 {
     /// <summary>
-    /// SKBitmap Loader
+    /// System.Drawing.Bitmap Image Loader
     /// </summary>
-    // ReSharper disable once InconsistentNaming
-    internal class SKBitmapLoader : EPaperImageBase<SkiaSharp.SKBitmap>
+    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>
     {
+
+        //########################################################################################
+
+        #region Fields
+
+        /// <summary>
+        /// Bitmap Dithering Helper
+        /// </summary>
+        private BitmapDithering m_BitmapDithering;
+
+        #endregion Fields
+
+        //########################################################################################
+
+        #region Properies
+
+        /// <summary>
+        /// Bitmap Dithering Helper
+        /// </summary>
+        private BitmapDithering BitmapDithering => m_BitmapDithering ?? (m_BitmapDithering = new BitmapDithering(SupportedByteColors));
+        
+        #endregion Properties
 
         //########################################################################################
 
         #region Constructor / Dispose / Finalizer
 
-        public SKBitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="ePaperDisplay"></param>
+        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
         {
         }
 
@@ -55,19 +79,27 @@ namespace Waveshare.Image.SKBitmap
         #region Protected Methods
 
         /// <summary>
-        /// Load the SKBitmap into a RAWImage
+        /// Load the SSystem.Drawing.Bitmap into a RAWImage
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        protected override IRawImage LoadImage(SkiaSharp.SKBitmap image)
+        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
         {
-            var maxWith = Math.Min(Width, image.Width);
+            var maxWidth = Math.Min(Width, image.Width);
             var maxHeight = Math.Min(Height, image.Height);
 
-            var subSet = new SkiaSharp.SKBitmap();
-            image.ExtractSubset(subSet, new SKRectI(0, 0, maxWith, maxHeight));
+            return new BitmapRawImage(image, maxWidth, maxHeight);
+        }
 
-            return new SKBitmapRawImage(subSet);
+        /// <summary>
+        /// Load a Image with dithering into the RawImage
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected override IRawImage LoadImageWithDithering(System.Drawing.Bitmap image)
+        {
+            var ditheredBitmap = BitmapDithering.Dither(image);
+            return LoadImage(ditheredBitmap);
         }
 
         #endregion Protected Methods
