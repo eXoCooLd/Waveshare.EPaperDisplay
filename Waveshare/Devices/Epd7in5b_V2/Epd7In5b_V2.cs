@@ -26,8 +26,7 @@
 #region Usings
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
@@ -65,6 +64,11 @@ namespace Waveshare.Devices.Epd7in5b_V2
         public override int Height { get; } = 480;
 
         /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public override IList<byte[]> SupportedByteColors { get; } = new List<byte[]> { ByteColors.White, ByteColors.Black, ByteColors.Red };
+
+        /// <summary>
         /// Get Status Command
         /// </summary>
         protected override byte GetStatusCommand { get; } = (byte)Epd7In5b_V2Commands.GetStatus;
@@ -90,8 +94,8 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// </summary>
         public override void Clear()
         {
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission1, Color.White);
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission2, Color.White);
+            FillColor(Epd7In5b_V2Commands.DataStartTransmission1, ByteColors.White);
+            FillColor(Epd7In5b_V2Commands.DataStartTransmission2, ByteColors.Black);
             TurnOnDisplay();
         }
 
@@ -100,8 +104,8 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// </summary>
         public override void ClearBlack()
         {
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission1, Color.Black);
-            FillColor(Epd7In5b_V2Commands.DataStartTransmission2, Color.Black);
+            FillColor(Epd7In5b_V2Commands.DataStartTransmission1, ByteColors.Black);
+            FillColor(Epd7In5b_V2Commands.DataStartTransmission2, ByteColors.Black);
             TurnOnDisplay();
         }
 
@@ -140,63 +144,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
         {
             WaitUntilReady();
             Thread.Sleep(200);
-        }
-
-        /// <summary>
-        /// Display a Image on the Display
-        /// </summary>
-        /// <param name="image">Bitmap that should be displayed</param>
-        public override void DisplayImage(Bitmap image)
-        {
-            SeparateColors(image, out var bw, out var red);
-
-            using (bw)
-            {
-                SendCommand(Epd7In5b_V2Commands.DataStartTransmission1);
-                SendBitmapToDevice(bw);
-            }
-
-            using (red)
-            {
-                SendCommand(Epd7In5b_V2Commands.DataStartTransmission2);
-                SendBitmapToDevice(red);
-            }
-
-            TurnOnDisplay();
-        }
-
-        /// <summary>
-        /// Separate Image into Black and Red Image
-        /// </summary>
-        /// <param name="image"></param>
-        /// <param name="imageBw"></param>
-        /// <param name="imageRed"></param>
-        private void SeparateColors(Bitmap image, out Bitmap imageBw, out Bitmap imageRed)
-        {
-            int width = image.Width;
-            int height = image.Height;
-
-            imageBw = new Bitmap(width, height);
-            imageRed = new Bitmap(width, height);
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    var pixel = image.GetPixel(x, y);
-
-                     if(IsRed(pixel.R, pixel.G, pixel.B))
-                    {
-                        imageRed.SetPixel(x, y, pixel);
-                        imageBw.SetPixel(x, y, Color.White);
-                    }
-                    else
-                    {
-                        imageBw.SetPixel(x, y, pixel);
-                        imageRed.SetPixel(x, y, Color.Black);
-                    }
-                }
-            }
         }
 
         #endregion Public Methods
@@ -290,115 +237,90 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Send a Bitmap as Byte Array to the Device
         /// </summary>
-        /// <param name="image">Bitmap image to convert</param>
-        internal override void SendBitmapToDevice(Bitmap image)
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
         {
-            const int pixelPerByte = 8;
-            int maxX = Math.Min(Width, image.Width);
-            int maxY = Math.Min(Height, image.Height);
-            sbyte[,] data = new sbyte[maxX, 2];
-            byte[] masks = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-            int outputStride = Width / pixelPerByte;
-            byte[] output = new byte[outputStride];
-            int lineC = 0;
+            var line = new byte[stride];
 
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            try
+            var imageBw = new List<List<byte>>();
+            var imageRed = new List<List<byte>>();
+
+            var imageLineMaxX = maxX * ColorBytesPerPixel;
+
+            for (var y = 0; y < Height; y++)
             {
-                IntPtr scanLine = inputData.Scan0;
-                byte[] inputLine = new byte[inputData.Stride];
-                bool odd = false;
-                bool dither = false;
-                sbyte error;
-                bool j;
-
-                for (int y = 0; y < maxY; y++, scanLine += inputData.Stride)
+                var bwLine = new List<byte>();
+                var redLine = new List<byte>();
+                
+                if (y < maxY)
                 {
-                    int lineP;
-                    if (odd)
-                    {
-                        lineP = 0;
-                        lineC = 1;
-                        odd = false;
-                        dither = true;
-                    }
-                    else
-                    {
-                        lineP = 1;
-                        lineC = 0;
-                        odd = true;
-                    }
-                    Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
+                    Marshal.Copy(scanLine, line, 0, line.Length);
 
-                    // Convert to greyscale
-                    for (int x = 0; x < maxX; x++)
+                    for (var x = 0; x < stride; x += ColorBytesPerPixel)
                     {
-                        var xpos = x * 3;
-                        data[x, lineC] = (sbyte)(64d * (ColorToByte(inputLine[xpos + 2], inputLine[xpos + 1], inputLine[xpos + 0]) / 255d - 0.5d));
-                    }
-
-                    if (dither)
-                    {
-                        // Dither to monochrome 8 pixels per byte using Floyd-Steinberg
-                        Array.Clear(output, 0, outputStride);
-                        for (int x = 0; x < maxX; x++)
+                        if (x < imageLineMaxX)
                         {
-                            j = data[x, lineP] > 0;
-                            if (j)
-                            {
-                                output[x / 8] |= masks[x % 8];
-                            }
+                            var color = GetByteColor(x, line);
 
-                            error = (sbyte)(data[x, lineP] - (j ? 32 : -32));
-                            if (x < maxX - 1)
+                            if (IsRed(color[2], color[1], color[0]))
                             {
-                                data[x + 1, lineP] += (sbyte)(7 * error / 16);
+                                redLine.AddRange(color);
+                                bwLine.AddRange(ByteColors.White);
                             }
-
-                            if (x > 0)
+                            else
                             {
-                                data[x - 1, lineC] += (sbyte)(3 * error / 16);
-                            }
-
-                            data[x, lineC] += (sbyte)(5 * error / 16);
-                            if (x < maxX - 1)
-                            {
-                                data[x + 1, lineC] += (sbyte)(1 * error / 16);
+                                bwLine.AddRange(color);
+                                redLine.AddRange(ByteColors.Black);
                             }
                         }
-                        SendData(output);
-                    }
-                }
-
-                Array.Clear(output, 0, outputStride);
-                for (int x = 0; x < maxX; x++)
-                {
-                    j = data[x, lineC] > 0;
-                    if (j)
-                    {
-                        output[x / 8] |= masks[x % 8];
                     }
 
-                    error = (sbyte)(data[x, lineC] - (j ? 32 : -32));
-                    if (x < maxX - 1)
-                    {
-                        data[x + 1, lineC] += (sbyte)(7 * error / 16);
-                    }
+                    scanLine += stride;
                 }
 
-                SendData(output);
-                if (maxY < Height)
-                {
-                    Array.Clear(output, 0, outputStride);
-                    for (int y = maxY; y < Height; y++)
-                    {
-                        SendData(output);
-                    }
-                }
+                imageBw.Add(bwLine);
+                imageRed.Add(redLine);
             }
-            finally
+
+            SendCommand(Epd7In5b_V2Commands.DataStartTransmission1);
+            SendRawBitmapToDevice(imageBw, stride, maxX, maxY);
+
+            SendCommand(Epd7In5b_V2Commands.DataStartTransmission2);
+            SendRawBitmapToDevice(imageRed, stride, maxX, maxY, ByteColors.Black);
+        }
+
+        /// <summary>
+        /// Send a Bitmap as Byte Array to the Device
+        /// </summary>
+        /// <param name="data">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        /// <param name="fillColor"></param>
+        internal void SendRawBitmapToDevice(List<List<byte>> data, int stride, int maxX, int maxY, byte[] fillColor = null)
+        {
+            var deviceStep = ColorBytesPerPixel * PixelPerByte;
+            var imageWidth = maxX * ColorBytesPerPixel;
+
+            for (var y = 0; y < Height; y++)
             {
-                image.UnlockBits(inputData);
+                var outputLine = fillColor == null ? CloneWhiteScanLine() : GetColoredLineOnDevice(fillColor);
+
+                if (y < maxY)
+                {
+                    var line = new byte[stride];
+                    data[y].CopyTo(line);
+
+                    for (var x = 0; x < imageWidth; x += deviceStep)
+                    {
+                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
+                    }
+                }
+
+                SendData(outputLine);
             }
         }
 
@@ -421,10 +343,10 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// Fill the screen with a color
         /// </summary>
         /// <param name="command">Start Data Transmission Command</param>
-        /// <param name="color">Color to fill the screen</param>
-        private void FillColor(Epd7In5b_V2Commands command, Color color)
+        /// <param name="rgb">Color to fill the screen</param>
+        private void FillColor(Epd7In5b_V2Commands command, byte[] rgb)
         {
-            var outputLine = GetColoredLineOnDevice(color);
+            var outputLine = GetColoredLineOnDevice(rgb);
 
             SendCommand(command);
 
@@ -432,6 +354,25 @@ namespace Waveshare.Devices.Epd7in5b_V2
             {
                 SendData(outputLine);
             }
+        }
+
+        /// <summary>
+        /// Get Color as Bytes from the Line
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        private byte[] GetByteColor(int x, byte[] line)
+        {
+            var indexR = x + 2;
+            var indexG = x + 1;
+            var indexB = x + 0;
+
+            var color = new byte[ColorBytesPerPixel];
+            color[0] = line[indexB];
+            color[1] = line[indexG];
+            color[2] = line[indexR];
+            return color;
         }
 
         #endregion Private Methods

@@ -287,19 +287,6 @@ namespace Waveshare.Common
             DeviceInitialize();
         }
 
-        /// <summary>
-        /// Display a Image on the Display
-        /// </summary>
-        /// <param name="image">Bitmap that should be displayed</param>
-        public virtual void DisplayImage(Bitmap image)
-        {
-            SendCommand(StartDataTransmissionCommand);
-            SendBitmapToDevice(image);
-            SendCommand(StopDataTransmissionCommand);
-
-            TurnOnDisplay();
-        }
-
         #endregion Public Methods
 
         //########################################################################################
