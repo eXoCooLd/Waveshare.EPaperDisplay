@@ -379,19 +379,19 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             var random = new Random();
             for (int i = 0; i < 200; i++)
             {
-                var b1 = (byte)random.Next(0, 0x0F);
-                var b2 = (byte)random.Next(0, 0x0F);
-                var b3 = (byte)random.Next(0, 0x0F);
-                var b4 = (byte)random.Next(0, 0x0F);
-                var b5 = (byte)random.Next(0, 0x0F);
-                var b6 = (byte)random.Next(0, 0x0F);
-                var b7 = (byte)random.Next(0, 0x0F);
-                var b8 = (byte)random.Next(0, 0x0F);
+                var value = random.Next(0, byte.MaxValue);
+                var b1 = (value & 128) > 0 ? byte.MaxValue : byte.MinValue;
+                var b2 = (value & 64) > 0 ? byte.MaxValue : byte.MinValue;
+                var b3 = (value & 32) > 0 ? byte.MaxValue : byte.MinValue;
+                var b4 = (value & 16) > 0 ? byte.MaxValue : byte.MinValue;
+                var b5 = (value & 8) > 0 ? byte.MaxValue : byte.MinValue;
+                var b6 = (value & 4) > 0 ? byte.MaxValue : byte.MinValue;
+                var b7 = (value & 2) > 0 ? byte.MaxValue : byte.MinValue;
+                var b8 = (value & 1) > 0 ? byte.MaxValue : byte.MinValue;
 
-                var oldResult = MergePixelDataInByte(b1, b2, b3, b4, b5, b6, b7, b8);
                 var newResult = result.MergePixelDataInByte(b1, b2, b3, b4, b5, b6, b7, b8);
 
-                Assert.AreEqual(oldResult, newResult, $"Merged Byte Run {i} is wrong. Expected {oldResult}, Returned {newResult}");
+                Assert.AreEqual(value, newResult, $"Merged Byte Run {i} is wrong. Expected {value}, Returned {newResult}");
             }
         }
 
@@ -430,24 +430,6 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             }
 
             return image;
-        }
-
-        /// <summary>
-        /// Original Method: Merge eight DataBytes into one Byte
-        /// </summary>
-        /// <param name="pixel1"></param>
-        /// <param name="pixel2"></param>
-        /// <param name="pixel3"></param>
-        /// <param name="pixel4"></param>
-        /// <param name="pixel5"></param>
-        /// <param name="pixel6"></param>
-        /// <param name="pixel7"></param>
-        /// <param name="pixel8"></param>
-        /// <returns></returns>
-        private static byte MergePixelDataInByte(byte pixel1, byte pixel2, byte pixel3, byte pixel4, byte pixel5, byte pixel6, byte pixel7, byte pixel8)
-        {
-            var output = (byte)((pixel1 << 7) | (pixel2 << 6) | (pixel3 << 5) | (pixel4 << 4) | (pixel5 << 3) | (pixel6 << 2) | (pixel7 << 1) | pixel8);
-            return output;
         }
 
         /// <summary>
@@ -625,6 +607,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <returns></returns>
         internal static byte MergePixelDataInByte(byte[] pixel)
         {
+            const int bitStates = 2;
             const int bitsInByte = 8;
             var bitMoveLength = bitsInByte / 8;
 
@@ -633,7 +616,9 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             for (var i = 0; i < pixel.Length; i++)
             {
                 var moveFactor = bitsInByte - bitMoveLength * (i + 1);
-                output |= (byte)(pixel[i] << moveFactor);
+                byte mask = (byte)Math.Pow(bitStates, (bitsInByte - i) - bitMoveLength);
+                byte posValue = (byte)((byte)(byte.MinValue | (byte)(pixel[i] << moveFactor)) & mask);
+                output |= posValue;
             }
 
             return output;

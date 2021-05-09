@@ -64,7 +64,7 @@ namespace Waveshare.Example
             ePaperDisplay.WaitUntilReady();
 
             Console.WriteLine("Sending Image to E-Paper Display...");
-            ePaperDisplay.DisplayImage(bitmap);
+            ePaperDisplay.DisplayImage(bitmap, true);
             Console.WriteLine("Done");
 
             ePaperDisplay.Sleep();

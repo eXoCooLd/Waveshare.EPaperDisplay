@@ -479,15 +479,23 @@ namespace Waveshare.Common
                 throw new ArgumentException($"Argument {nameof(pixel)}.Length is not PixelPerByte {PixelPerByte}", nameof(pixel));
             }
 
+            const int bitStates = 2;
             const int bitsInByte = 8;
+
             var bitMoveLength = bitsInByte / PixelPerByte;
+            var maxValue = (byte) Math.Pow(bitStates, bitMoveLength) - 1;
 
             byte output = 0;
 
             for (var i = 0; i < pixel.Length; i++)
             {
-                var moveFactor = bitsInByte - bitMoveLength * (i + 1);
-                output |= (byte)(pixel[i] << moveFactor);
+                var bitMoveValue = bitsInByte - bitMoveLength - (i * bitMoveLength); 
+
+                var value = (byte)(pixel[i] << bitMoveValue);
+                var mask = maxValue << bitMoveValue;
+                var posValue = (byte)(value & mask);
+
+                output |= posValue;
             }
 
             return output;
