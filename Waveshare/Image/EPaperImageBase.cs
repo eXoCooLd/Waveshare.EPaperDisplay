@@ -26,7 +26,7 @@
 #region Usings
 
 using System;
-using System.Collections.Generic;
+using Waveshare.Common;
 using Waveshare.Interfaces;
 
 #endregion Usings
@@ -62,7 +62,7 @@ namespace Waveshare.Image
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        protected IList<byte[]> SupportedByteColors => EPaperDisplay.SupportedByteColors;
+        protected ByteColor[] SupportedByteColors => EPaperDisplay.SupportedByteColors;
 
         #endregion Properties
 
@@ -164,9 +164,9 @@ namespace Waveshare.Image
         public void Reset() => EPaperDisplay.Reset();
 
         /// <summary>
-        /// Display a Image on the Display
+        /// Display an Image on the Display
         /// </summary>
-        /// <param name="image">Image that should be displayed</param>
+        /// <param name="image">Image to be displayed</param>
         /// <param name="dithering">Use Dithering</param>
         public void DisplayImage(T image, bool dithering)
         {
@@ -181,28 +181,28 @@ namespace Waveshare.Image
         }
 
         /// <summary>
-        /// Display a Image on the Display
+        /// Display an Image on the Display
         /// </summary>
-        /// <param name="image">Image that should be displayed</param>
+        /// <param name="image">Image to be displayed</param>
         public void DisplayImage(T image)
         {
             using (var rawImage = LoadImage(image))
             {
                 EPaperDisplay.ColorBytesPerPixel = rawImage.BytesPerPixel;
-                EPaperDisplay.DisplayImage(rawImage);
+                EPaperDisplay.DisplayImage(rawImage, false);
             }
         }
 
         /// <summary>
         /// Display Image of a generic Type with dithering
         /// </summary>
-        /// <param name="image">Image that should be displayed</param>
+        /// <param name="image">Image to be displayed</param>
         public void DisplayImageWithDithering(T image)
         {
-            using (var rawImage = LoadImageWithDithering(image))
+            using (var rawImage = LoadImage(image))
             {
                 EPaperDisplay.ColorBytesPerPixel = rawImage.BytesPerPixel;
-                EPaperDisplay.DisplayImage(rawImage);
+                EPaperDisplay.DisplayImage(rawImage, true);
             }
         }
 
@@ -224,7 +224,7 @@ namespace Waveshare.Image
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        protected abstract IRawImage LoadImageWithDithering(T image);
+        //protected abstract IRawImage LoadImageWithDithering(T image);
 
         #endregion Protected Methods
 

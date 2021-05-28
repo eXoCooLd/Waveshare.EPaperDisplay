@@ -5,8 +5,10 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5b_V2;
@@ -32,6 +34,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             m_EPaperDisplayHardwareMock.Setup(e => e.BusyPin).Returns(PinValue.High);
             m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<byte[]>())).Callback((byte[] b) => m_DataBuffer.AddRange(b));
             m_EPaperDisplayHardwareMock.Setup(e => e.WriteByte(It.IsAny<byte>())).Callback((byte b) => m_DataBuffer.Add(b));
+            m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<MemoryStream>())).Callback((MemoryStream b) => m_DataBuffer.AddRange(b.ToArray()));
         }
 
         [Test]
@@ -234,16 +237,15 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             using var result = new Epd7In5b_V2();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
-            var image = CreateSampleBitmap(result.Width, result.Height);
+            var image = CommonTestData.CreateSampleBitmap(result.Width, result.Height);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5b_V2Commands.DataStartTransmission2,
                 (byte) Epd7In5b_V2Commands.DataStartTransmission1
             };
 
             SeparateColors(image, out var imageBw, out var imageRed);
-            
+
             using (imageBw)
             {
                 validBuffer.AddRange(SendBitmapToDevice(imageBw, result.Width, result.Height, byte.MaxValue));
@@ -253,18 +255,18 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
 
             using (imageRed)
             {
-                validBuffer.AddRange(SendBitmapToDevice(imageRed, result.Width, result.Height));
+                validBuffer.AddRange(SendBitmapToDevice(imageRed, result.Width, result.Height, 0));
             }
 
-            validBuffer.Add((byte)Epd7In5b_V2Commands.DataStop);
             validBuffer.Add((byte)Epd7In5b_V2Commands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5b_V2Commands.GetStatus);
-            
+
             m_DataBuffer.Clear();
 
             var bitmapEPaperDisplay = new BitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -274,11 +276,10 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             using var result = new Epd7In5b_V2();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
-            var image = CreateSampleBitmap(result.Width / 2, result.Height / 2);
+            var image = CommonTestData.CreateSampleBitmap(result.Width / 2, result.Height / 2);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5b_V2Commands.DataStartTransmission2,
                 (byte) Epd7In5b_V2Commands.DataStartTransmission1
             };
 
@@ -293,10 +294,9 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
 
             using (imageRed)
             {
-                validBuffer.AddRange(SendBitmapToDevice(imageRed, result.Width, result.Height));
+                validBuffer.AddRange(SendBitmapToDevice(imageRed, result.Width, result.Height, 0));
             }
 
-            validBuffer.Add((byte)Epd7In5b_V2Commands.DataStop);
             validBuffer.Add((byte)Epd7In5b_V2Commands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5b_V2Commands.GetStatus);
 
@@ -311,15 +311,16 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
                 {
                     if (m_DataBuffer[i] != validBuffer[i])
                     {
-                        Console.WriteLine($"{i} - {m_DataBuffer[i]} - {validBuffer[i]}");
+                        Debug.WriteLine($"{i} - {m_DataBuffer[i]} - {validBuffer[i]}");
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"{i} - {m_DataBuffer[i]} - X");
+                    Debug.WriteLine($"{i} - {m_DataBuffer[i]} - X");
                 }
             }
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -395,43 +396,6 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             }
         }
 
-        private static Bitmap CreateSampleBitmap(int width, int height)
-        {
-            var image = new Bitmap(width, height);
-
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var color = Color.White;
-
-                    if (x % 2 == 0)
-                    {
-                        color = Color.Black;
-                    }
-
-                    if (x % 3 == 0)
-                    {
-                        color = Color.Red;
-                    }
-
-                    if (x % 4 == 0)
-                    {
-                        color = Color.Gray;
-                    }
-
-                    if (x % 5 == 0)
-                    {
-                        color = Color.FromArgb(255, 50, 0, 0);
-                    }
-
-                    image.SetPixel(x, y, color);
-                }
-            }
-
-            return image;
-        }
-
         /// <summary>
         /// Separate Image into Black and Red Image
         /// </summary>
@@ -443,8 +407,8 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             int width = image.Width;
             int height = image.Height;
 
-            imageBw = new Bitmap(width, height);
-            imageRed = new Bitmap(width, height);
+            imageBw = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            imageRed = new Bitmap(width, height, PixelFormat.Format24bppRgb);
 
             for (int y = 0; y < height; y++)
             {
@@ -454,8 +418,8 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
 
                     if (IsRed(pixel.R, pixel.G, pixel.B))
                     {
-                        imageRed.SetPixel(x, y, pixel);
-                        imageBw.SetPixel(x, y, Color.White);
+                        imageRed.SetPixel(x, y, Color.Red);
+                        imageBw.SetPixel(x, y, Color.Black);
                     }
                     else
                     {
@@ -474,7 +438,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <param name="g">Green color byte</param>
         /// <param name="b">Blue color byte</param>
         /// <returns></returns>
-        private static bool IsMonochrom(byte r, byte g, byte b)
+        private static bool IsMonochrome(byte r, byte g, byte b)
         {
             return r == g && g == b;
         }
@@ -488,7 +452,12 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <returns></returns>
         private static bool IsRed(byte r, byte g, byte b)
         {
-            return r > (g + 20) && r > (b + 20);
+            if (IsMonochrome(r, g, b))
+            {
+                return false;
+            }
+
+            return r > (g + 20) && r > (b + 20) && r >= 64;
         }
 
         /// <summary>
@@ -498,7 +467,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <param name="defaultColor"></param>
-        internal static byte[] SendBitmapToDevice(Bitmap image, int width, int height, byte defaultColor = 0)
+        internal static byte[] SendBitmapToDevice(Bitmap image, int width, int height, byte defaultColor)
         {
             var outputArray = new List<byte>();
 
@@ -586,11 +555,11 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <returns></returns>
         private static byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
         {
-            var pixelWith = 3 * pixel;
+            var pixelWidth = 3 * pixel;
 
-            var colorR = xPosition + pixelWith + 2;
-            var colorG = xPosition + pixelWith + 1;
-            var colorB = xPosition + pixelWith + 0;
+            var colorB = xPosition + pixelWidth;
+            var colorG = xPosition + ++pixelWidth;
+            var colorR = xPosition + ++pixelWidth;
 
             if (colorR >= line.Length)
             {
@@ -609,15 +578,20 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         {
             const int bitStates = 2;
             const int bitsInByte = 8;
+
             var bitMoveLength = bitsInByte / 8;
+            var maxValue = (byte)Math.Pow(bitStates, bitMoveLength) - 1;
 
             byte output = 0;
 
             for (var i = 0; i < pixel.Length; i++)
             {
-                var moveFactor = bitsInByte - bitMoveLength * (i + 1);
-                byte mask = (byte)Math.Pow(bitStates, (bitsInByte - i) - bitMoveLength);
-                byte posValue = (byte)((byte)(byte.MinValue | (byte)(pixel[i] << moveFactor)) & mask);
+                var bitMoveValue = bitsInByte - bitMoveLength - (i * bitMoveLength);
+
+                var value = (byte)(pixel[i] << bitMoveValue);
+                var mask = maxValue << bitMoveValue;
+                var posValue = (byte)(value & mask);
+
                 output |= posValue;
             }
 
@@ -633,12 +607,12 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         private static byte ColorToByte(byte r, byte g, byte b)
         {
-            if (IsMonochrom(r, g, b) || IsRed(r, g, b))
+            if (IsRed(r, g, b))
             {
-                return (byte)(byte.MinValue + r);
+                return 1;
             }
 
-            return (byte)(byte.MinValue + (r * 0.299 + g * 0.587 + b * 0.114));
+            return (byte)((r * 0.299 + g * 0.587 + b * 0.114 + .005) < 128 ? 0 : 1);
         }
     }
 }

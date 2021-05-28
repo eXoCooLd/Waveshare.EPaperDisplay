@@ -26,6 +26,7 @@
 #region Usings
 using System;
 using System.Device.Gpio;
+using System.IO;
 #endregion Usings
 
 namespace Waveshare.Interfaces
@@ -54,6 +55,12 @@ namespace Waveshare.Interfaces
         /// GPIO Busy Pin
         /// </summary>
         PinValue BusyPin { get; set; }
+
+        /// <summary>
+        /// Write data to the SPI device
+        /// </summary>
+        /// <param name="stream">The stream that contains the data to be written to the SPI device</param>
+        void Write(MemoryStream stream);
 
         /// <summary>
         /// Write data to the SPI device
