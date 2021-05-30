@@ -50,7 +50,7 @@ namespace Waveshare.Test.Devices
         /// <returns></returns>
         public static Bitmap CreateSampleBitmap(int width, int height)
         {
-            var image = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+            var image = new Bitmap(width, height, PixelFormat.Format24bppRgb);
 
             for (int y = 0; y < image.Height; y++)
             {

@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2020 Greg Cannon
+// Copyright(c) 2021 Greg Cannon
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,6 @@
 
 #region Usings
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
 
@@ -46,12 +43,20 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         //########################################################################################
 
+        #region Fields
+
+        private EPaperDisplayWriter m_DisplayWriter;
+
+        #endregion Fields
+
+        //########################################################################################
+
         #region Properties
 
         /// <summary>
         /// Pixels per Byte on the Device
         /// </summary>
-        protected override int PixelPerByte { get; } = 8;
+        public override int PixelPerByte { get; } = 8;
 
         /// <summary>
         /// Pixel Width of the Display
@@ -66,7 +71,17 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        public override IList<byte[]> SupportedByteColors { get; } = new List<byte[]> { ByteColors.White, ByteColors.Black, ByteColors.Red };
+        public override ByteColor[] SupportedByteColors { get; } = new ByteColor[] { ByteColors.White, ByteColors.Black, ByteColors.Red };
+
+        /// <summary>
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
+        /// </summary>
+        public override byte[] DeviceByteColors { get; } = new byte[] { 0x01, 0x00, 0x01 };
+
+        /// <summary>
+        /// Display Writer assigned to the device
+        /// </summary>
+        public override EPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
 
         /// <summary>
         /// Get Status Command
@@ -76,12 +91,12 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Start Data Transmission Command
         /// </summary>
-        protected override byte StartDataTransmissionCommand { get; } = (byte)Epd7In5b_V2Commands.DataStartTransmission2;
+        protected override byte StartDataTransmissionCommand { get; } = (byte)Epd7In5b_V2Commands.DataStartTransmission1;
 
         /// <summary>
         /// Stop Data Transmission Command
         /// </summary>
-        protected override byte StopDataTransmissionCommand { get; } = (byte)Epd7In5b_V2Commands.DataStop;
+        protected override byte StopDataTransmissionCommand { get; } = (byte)byte.MaxValue;
 
         #endregion Properties
 
@@ -153,6 +168,18 @@ namespace Waveshare.Devices.Epd7in5b_V2
         #region Protected Methods
 
         /// <summary>
+        /// Dispost of instantiated objects
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (m_DisplayWriter != null)
+            {
+                m_DisplayWriter.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Device specific Initializer
         /// </summary>
         protected override void DeviceInitialize()
@@ -218,117 +245,41 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <param name="g">Green color byte</param>
         /// <param name="b">Blue color byte</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        protected override byte ColorToByte(byte r, byte g, byte b)
+        protected override byte ColorToByte(ByteColor rgb)
         {
-            if (IsMonochrom(r, g, b) || IsRed(r, g, b))
+            if (!rgb.IsMonochrome && !IsRed(rgb))
             {
-                return (byte)(byte.MinValue + r);
+                rgb.Desaturate();
             }
 
-            return (byte)(byte.MinValue + (r * 0.299 + g * 0.587 + b * 0.114));
+            return (byte)(rgb.R >= 128 ? 1 : 0);
         }
 
         #endregion Protected Methods
 
         //########################################################################################
 
-        #region Internal Methods
-
-        /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
-        /// <param name="stride">Length of a ScanLine</param>
-        /// <param name="maxX">Max Pixels horizontal</param>
-        /// <param name="maxY">Max Pixels Vertical</param>
-        internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
-        {
-            var line = new byte[stride];
-
-            var imageBw = new List<List<byte>>();
-            var imageRed = new List<List<byte>>();
-
-            var imageLineMaxX = maxX * ColorBytesPerPixel;
-
-            for (var y = 0; y < Height; y++)
-            {
-                var bwLine = new List<byte>();
-                var redLine = new List<byte>();
-                
-                if (y < maxY)
-                {
-                    Marshal.Copy(scanLine, line, 0, line.Length);
-
-                    for (var x = 0; x < stride; x += ColorBytesPerPixel)
-                    {
-                        if (x < imageLineMaxX)
-                        {
-                            var color = GetByteColor(x, line);
-
-                            if (IsRed(color[2], color[1], color[0]))
-                            {
-                                redLine.AddRange(color);
-                                bwLine.AddRange(ByteColors.White);
-                            }
-                            else
-                            {
-                                bwLine.AddRange(color);
-                                redLine.AddRange(ByteColors.Black);
-                            }
-                        }
-                    }
-
-                    scanLine += stride;
-                }
-
-                imageBw.Add(bwLine);
-                imageRed.Add(redLine);
-            }
-
-            SendCommand(Epd7In5b_V2Commands.DataStartTransmission1);
-            SendRawBitmapToDevice(imageBw, stride, maxX, maxY);
-
-            SendCommand(Epd7In5b_V2Commands.DataStartTransmission2);
-            SendRawBitmapToDevice(imageRed, stride, maxX, maxY, ByteColors.Black);
-        }
-
-        /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="data">Int Pointer to the start of the Bytearray</param>
-        /// <param name="stride">Length of a ScanLine</param>
-        /// <param name="maxX">Max Pixels horizontal</param>
-        /// <param name="maxY">Max Pixels Vertical</param>
-        /// <param name="fillColor"></param>
-        internal void SendRawBitmapToDevice(List<List<byte>> data, int stride, int maxX, int maxY, byte[] fillColor = null)
-        {
-            var deviceStep = ColorBytesPerPixel * PixelPerByte;
-            var imageWidth = maxX * ColorBytesPerPixel;
-
-            for (var y = 0; y < Height; y++)
-            {
-                var outputLine = fillColor == null ? CloneWhiteScanLine() : GetColoredLineOnDevice(fillColor);
-
-                if (y < maxY)
-                {
-                    var line = new byte[stride];
-                    data[y].CopyTo(line);
-
-                    for (var x = 0; x < imageWidth; x += deviceStep)
-                    {
-                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                    }
-                }
-
-                SendData(outputLine);
-            }
-        }
-
-        #endregion
-
-        //########################################################################################
 
         #region Private Methods
+
+        /// <summary>
+        /// Generate a display writer for this device
+        /// </summary>
+        /// <returns>Returns a display writer</returns>
+        private EPaperDisplayWriter GetDisplayWriter()
+        {
+            return new Epd7in5b_V2Writer(this);
+        }
+
+        /// <summary>
+        /// Check if a Pixel is Red
+        /// </summary>
+        /// <param name="rgb"></param>
+        /// <returns></returns>
+        private static bool IsRed(ByteColor rgb)
+        {
+            return rgb.R > (rgb.G + 20) && rgb.R > (rgb.B + 20) && rgb.R >= 64;
+        }
 
         /// <summary>
         /// Helper to send a Command based o the Epd7In5b_V2Commands Enum
@@ -344,7 +295,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// </summary>
         /// <param name="command">Start Data Transmission Command</param>
         /// <param name="rgb">Color to fill the screen</param>
-        private void FillColor(Epd7In5b_V2Commands command, byte[] rgb)
+        private void FillColor(Epd7In5b_V2Commands command, ByteColor rgb)
         {
             var outputLine = GetColoredLineOnDevice(rgb);
 
@@ -354,25 +305,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
             {
                 SendData(outputLine);
             }
-        }
-
-        /// <summary>
-        /// Get Color as Bytes from the Line
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="line"></param>
-        /// <returns></returns>
-        private byte[] GetByteColor(int x, byte[] line)
-        {
-            var indexR = x + 2;
-            var indexG = x + 1;
-            var indexB = x + 0;
-
-            var color = new byte[ColorBytesPerPixel];
-            color[0] = line[indexB];
-            color[1] = line[indexG];
-            color[2] = line[indexR];
-            return color;
         }
 
         #endregion Private Methods

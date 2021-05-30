@@ -42,6 +42,14 @@ namespace Waveshare.Image.Bitmap
 
         //########################################################################################
 
+        #region Fields
+
+        private bool Disposed = false;
+
+        #endregion Fields
+
+        //########################################################################################
+
         #region Properties
 
         /// <summary>
@@ -117,15 +125,33 @@ namespace Waveshare.Image.Bitmap
         /// <summary>
         /// Dispose
         /// </summary>
+        public void Dispose(bool disposing)
+        {
+            if (Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                Bitmap?.UnlockBits(BitmapData);
+                BitmapData = null;
+                m_ScanLine = IntPtr.Zero;
+
+                Bitmap?.Dispose();
+                Bitmap = null;
+            }
+
+            Disposed = true;
+        }
+
         public void Dispose()
         {
-            Bitmap?.UnlockBits(BitmapData);
-            BitmapData = null;
-            m_ScanLine = IntPtr.Zero;
-
-            Bitmap?.Dispose();
-            Bitmap = null;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+
+        ~BitmapRawImage() => Dispose(false);
 
         #endregion Constructor / Dispose / Finalizer
 

@@ -23,8 +23,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-using System;
-using System.Collections.Generic;
+using Waveshare.Common;
 
 namespace Waveshare.Interfaces
 {
@@ -41,7 +40,7 @@ namespace Waveshare.Interfaces
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        IList<byte[]> SupportedByteColors { get; }
+        ByteColor[] SupportedByteColors { get; }
 
         /// <summary>
         /// E-Paper Hardware Interface for GPIO and SPI Bus
@@ -58,6 +57,6 @@ namespace Waveshare.Interfaces
         /// Display a Image on the Display
         /// </summary>
         /// <param name="rawImage">Bitmap that should be displayed</param>
-        void DisplayImage(IRawImage rawImage);
+        void DisplayImage(IRawImage rawImage, bool dithering);
     }
 }

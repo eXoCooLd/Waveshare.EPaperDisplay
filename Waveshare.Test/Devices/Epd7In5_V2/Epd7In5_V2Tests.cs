@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5_V2;
@@ -68,6 +69,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             m_EPaperDisplayHardwareMock.Setup(e => e.BusyPin).Returns(PinValue.High);
             m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<byte[]>())).Callback((byte[] b) => m_DataBuffer.AddRange(b));
             m_EPaperDisplayHardwareMock.Setup(e => e.WriteByte(It.IsAny<byte>())).Callback((byte b) => m_DataBuffer.Add(b));
+            m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<MemoryStream>())).Callback((MemoryStream b) => m_DataBuffer.AddRange(b.ToArray()));
         }
 
         #endregion Setup
@@ -276,7 +278,6 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             m_DataBuffer.Clear();
 
             validBuffer.AddRange(SendBitmapToDevice(image, result.Width, result.Height));
-            validBuffer.Add((byte)Epd7In5_V2Commands.DataStop);
             validBuffer.Add((byte)Epd7In5_V2Commands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5_V2Commands.GetStatus);
 
@@ -285,6 +286,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             var bitmapEPaperDisplay = new BitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -304,7 +306,6 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             m_DataBuffer.Clear();
 
             validBuffer.AddRange(SendBitmapToDevice(image, result.Width, result.Height));
-            validBuffer.Add((byte)Epd7In5_V2Commands.DataStop);
             validBuffer.Add((byte)Epd7In5_V2Commands.DisplayRefresh);
             validBuffer.Add((byte)Epd7In5_V2Commands.GetStatus);
 
@@ -313,6 +314,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             var bitmapEPaperDisplay = new BitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -476,11 +478,11 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         /// <returns></returns>
         private static byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
         {
-            var pixelWith = 3 * pixel;
+            var pixelWidth = 3 * pixel;
 
-            var colorR = xPosition + pixelWith + 2;
-            var colorG = xPosition + pixelWith + 1;
-            var colorB = xPosition + pixelWith + 0;
+            var colorB = xPosition + pixelWidth;
+            var colorG = xPosition + ++pixelWidth;
+            var colorR = xPosition + ++pixelWidth;
 
             if (colorR >= line.Length)
             {
@@ -525,10 +527,10 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         {
             if (r == g && r == b)
             {
-                return (byte)(byte.MaxValue - r);
+                return (byte)(r < 128 ? 1 : 0);
             }
 
-            return (byte)(byte.MaxValue - (r * 0.299 + g * 0.587 + b * 0.114));
+            return (byte)((r * 0.299 + g * 0.587 + b * 0.114 + .005) < 128 ? 1 : 0);
         }
 
         #endregion Old working Implementation

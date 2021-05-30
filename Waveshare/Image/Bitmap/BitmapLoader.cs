@@ -56,7 +56,7 @@ namespace Waveshare.Image.Bitmap
         /// <summary>
         /// Bitmap Dithering Helper
         /// </summary>
-        private BitmapDithering BitmapDithering => m_BitmapDithering ?? (m_BitmapDithering = new BitmapDithering(SupportedByteColors));
+        // private BitmapDithering BitmapDithering => m_BitmapDithering ?? (m_BitmapDithering = new BitmapDithering(SupportedByteColors));
         
         #endregion Properties
 
@@ -79,7 +79,7 @@ namespace Waveshare.Image.Bitmap
         #region Protected Methods
 
         /// <summary>
-        /// Load the SSystem.Drawing.Bitmap into a RAWImage
+        /// Load the System.Drawing.Bitmap into a RawImage
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
@@ -96,11 +96,11 @@ namespace Waveshare.Image.Bitmap
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        protected override IRawImage LoadImageWithDithering(System.Drawing.Bitmap image)
-        {
-            var ditheredBitmap = BitmapDithering.Dither(image);
-            return LoadImage(ditheredBitmap);
-        }
+        //protected override IRawImage LoadImageWithDithering(System.Drawing.Bitmap image)
+        //{
+        //    var ditheredBitmap = BitmapDithering.Dither(image);
+        //    return LoadImage(ditheredBitmap);
+        //}
 
         #endregion Protected Methods
 

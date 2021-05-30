@@ -31,23 +31,23 @@ namespace Waveshare.Common
     internal class ByteColors
     {
         /// <summary>
-        /// Color White as ByteArray
+        /// Color White as ByteColor
         /// </summary>
-        public static readonly byte[] White = { 255, 255, 255 };
+        public static readonly ByteColor White = new ByteColor(255, 255, 255);
 
         /// <summary>
-        /// Color Gray as ByteArray
+        /// Color Gray as ByteColor
         /// </summary>
-        public static readonly byte[] Gray = { 128, 128, 128 };
+        public static readonly ByteColor Gray = new ByteColor(128, 128, 128);
 
         /// <summary>
-        /// Color Black as ByteArray
+        /// Color Black as ByteColor
         /// </summary>
-        public static readonly byte[] Black = { 0, 0, 0 };
+        public static readonly ByteColor Black = new ByteColor(0, 0, 0);
 
         /// <summary>
-        /// Color Red as ByteArray
+        /// Color Red as ByteColor
         /// </summary>
-        public static readonly byte[] Red = {255, 0, 0};
+        public static readonly ByteColor Red = new ByteColor(255, 0, 0);
     }
 }

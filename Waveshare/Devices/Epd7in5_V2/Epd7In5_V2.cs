@@ -25,9 +25,6 @@
 
 #region Usings
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
 
@@ -46,12 +43,20 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         //########################################################################################
 
+        #region Fields
+
+        private EPaperDisplayWriter m_DisplayWriter;
+
+        #endregion Fields
+
+        //########################################################################################
+
         #region Properties
 
         /// <summary>
         /// Pixels per Byte on the Device
         /// </summary>
-        protected override int PixelPerByte { get; } = 8;
+        public override int PixelPerByte { get; } = 8;
 
         /// <summary>
         /// Pixel Width of the Display
@@ -66,7 +71,17 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        public override IList<byte[]> SupportedByteColors { get; } = new List<byte[]> { ByteColors.White, ByteColors.Black };
+        public override ByteColor[] SupportedByteColors { get; } = new ByteColor[] { ByteColors.White, ByteColors.Black };
+
+        /// <summary>
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
+        /// </summary>
+        public override byte[] DeviceByteColors { get; } = new byte[] { 0x00, 0x01 };
+
+        /// <summary>
+        /// Display Writer assigned to the device
+        /// </summary>
+        public override EPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
 
         /// <summary>
         /// Get Status Command
@@ -81,7 +96,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Stop Data Transmission Command
         /// </summary>
-        protected override byte StopDataTransmissionCommand { get; } = (byte)Epd7In5_V2Commands.DataStop;
+        protected override byte StopDataTransmissionCommand { get; } = byte.MaxValue;
 
         #endregion Properties
 
@@ -152,6 +167,18 @@ namespace Waveshare.Devices.Epd7in5_V2
         #region Protected Methods
 
         /// <summary>
+        /// Dispost of instantiated objects
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            if (m_DisplayWriter != null)
+            {
+                m_DisplayWriter.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Device specific Initializer
         /// </summary>
         protected override void DeviceInitialize()
@@ -211,14 +238,12 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <param name="g">Green color byte</param>
         /// <param name="b">Blue color byte</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        protected override byte ColorToByte(byte r, byte g, byte b)
+        protected override byte ColorToByte(ByteColor rgb)
         {
-            if (r == g && r == b)
-            {
-                return (byte)(byte.MaxValue - r);
-            }
-
-            return (byte)(byte.MaxValue - (r * 0.299 + g * 0.587 + b * 0.114));
+            if (rgb.R < 128)
+                return 1;
+            else
+                return 0;
         }
 
         #endregion Protected Methods
@@ -227,45 +252,21 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         #region Internal Methods
 
-        /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
-        /// <param name="stride">Length of a ScanLine</param>
-        /// <param name="maxX">Max Pixels horizontal</param>
-        /// <param name="maxY">Max Pixels Vertical</param>
-        internal override void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
-        {
-            var deviceLineWithInByte = Width * ColorBytesPerPixel;
-            var deviceStep = ColorBytesPerPixel * PixelPerByte;
-
-            var line = new byte[stride];
-
-            for (var y = 0; y < Height; y++)
-            {
-                var outputLine = CloneWhiteScanLine();
-
-                if (y < maxY)
-                {
-                    Marshal.Copy(scanLine, line, 0, line.Length);
-
-                    for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
-                    {
-                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                    }
-
-                    scanLine += stride;
-                }
-
-                SendData(outputLine);
-            }
-        }
-
         #endregion
 
         //########################################################################################
 
         #region Private Methods
+
+        /// <summary>
+        /// Generate a display writer for this device
+        /// </summary>
+        /// <returns>Returns a display writer</returns>
+        private EPaperDisplayWriter GetDisplayWriter()
+        {
+            return new EPaperDisplayWriter(this);
+        }
+
 
         /// <summary>
         /// Helper to send a Command based o the Epd7In5_V2Commands Enum
@@ -281,7 +282,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// </summary>
         /// <param name="command">Start Data Transmission Command</param>
         /// <param name="rgb">Color to fill the screen</param>
-        private void FillColor(Epd7In5_V2Commands command, byte[] rgb)
+        private void FillColor(Epd7In5_V2Commands command, ByteColor rgb)
         {
             var outputLine = GetColoredLineOnDevice(rgb);
 
@@ -292,6 +293,7 @@ namespace Waveshare.Devices.Epd7in5_V2
                 SendData(outputLine);
             }
         }
+
 
         #endregion Private Methods
 
