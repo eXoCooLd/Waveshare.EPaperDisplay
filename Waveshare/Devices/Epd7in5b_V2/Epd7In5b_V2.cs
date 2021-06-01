@@ -168,18 +168,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
         #region Protected Methods
 
         /// <summary>
-        /// Dispost of instantiated objects
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing)
-        {
-            if (m_DisplayWriter != null)
-            {
-                m_DisplayWriter.Dispose();
-            }
-        }
-
-        /// <summary>
         /// Device specific Initializer
         /// </summary>
         protected override void DeviceInitialize()

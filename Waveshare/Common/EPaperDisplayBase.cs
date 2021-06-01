@@ -69,6 +69,11 @@ namespace Waveshare.Common
         /// </summary>
         private byte? m_WhitePixelBlockOnDevice;
 
+        /// <summary>
+        /// Has class been disposed
+        /// </summary>
+        private bool Disposed = false;
+
         #endregion Fields
 
         //########################################################################################
@@ -165,31 +170,39 @@ namespace Waveshare.Common
         /// <summary>
         /// Finalizer
         /// </summary>
-        ~EPaperDisplayBase()
-        {
-            Dispose(false);
-
-            DeviceShutdown();
-        }
+        ~EPaperDisplayBase() => Dispose(false);
 
         /// <summary>
-        /// Dispose
+        /// Dispose of class
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
-
-            DeviceShutdown();
-
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Dispose for sub classes
+        /// Dispose of instantiated objects
         /// </summary>
-        /// <param name="disposing"></param>
+        /// <param name="disposing">Explicit dispose</param>
         protected virtual void Dispose(bool disposing)
         {
+            if (Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                if (DisplayWriter != null)
+                {
+                    DisplayWriter.Dispose();
+                }
+
+                DeviceShutdown();
+            }
+
+            Disposed = true;
         }
 
         #endregion Constructor / Dispose / Finalizer
