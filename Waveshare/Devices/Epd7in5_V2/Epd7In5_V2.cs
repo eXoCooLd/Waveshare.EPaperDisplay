@@ -222,25 +222,14 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
+        /// <param name="rgb">color bytes</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(ByteColor rgb)
         {
-            if (rgb.R < 128)
-                return 1;
-            else
-                return 0;
+            return rgb.R < 128 ? (byte) 1 : (byte) 0;
         }
 
         #endregion Protected Methods
-
-        //########################################################################################
-
-        #region Internal Methods
-
-        #endregion
 
         //########################################################################################
 

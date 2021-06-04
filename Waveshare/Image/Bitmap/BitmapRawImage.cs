@@ -37,16 +37,8 @@ namespace Waveshare.Image.Bitmap
     /// <summary>
     /// RAW Image Wrapper of a Bitmap
     /// </summary>
-    public class BitmapRawImage : IRawImage
+    internal sealed class BitmapRawImage : IRawImage
     {
-
-        //########################################################################################
-
-        #region Fields
-
-        private bool Disposed = false;
-
-        #endregion Fields
 
         //########################################################################################
 
@@ -125,32 +117,32 @@ namespace Waveshare.Image.Bitmap
         /// <summary>
         /// Dispose
         /// </summary>
-        public void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (Disposed)
-            {
-                return;
-            }
-
             if (disposing)
             {
                 Bitmap?.UnlockBits(BitmapData);
                 BitmapData = null;
                 m_ScanLine = IntPtr.Zero;
 
-                Bitmap?.Dispose();
+                //Do not dispose the Bitmap, because we did not create it.
+                //We do not know if it is used after the display refresh
                 Bitmap = null;
             }
-
-            Disposed = true;
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~BitmapRawImage() => Dispose(false);
 
         #endregion Constructor / Dispose / Finalizer

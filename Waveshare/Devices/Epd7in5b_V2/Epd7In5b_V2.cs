@@ -96,7 +96,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Stop Data Transmission Command
         /// </summary>
-        protected override byte StopDataTransmissionCommand { get; } = (byte)byte.MaxValue;
+        protected override byte StopDataTransmissionCommand { get; } = byte.MaxValue;
 
         #endregion Properties
 
@@ -229,9 +229,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
+        /// <param name="rgb">color bytes</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(ByteColor rgb)
         {
@@ -256,7 +254,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <returns>Returns a display writer</returns>
         private EPaperDisplayWriter GetDisplayWriter()
         {
-            return new Epd7in5b_V2Writer(this);
+            return new Epd7In5BV2Writer(this);
         }
 
         /// <summary>

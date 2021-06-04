@@ -72,7 +72,7 @@ namespace Waveshare.Common
         /// <summary>
         /// Has class been disposed
         /// </summary>
-        private bool Disposed = false;
+        private bool m_Disposed;
 
         #endregion Fields
 
@@ -187,22 +187,18 @@ namespace Waveshare.Common
         /// <param name="disposing">Explicit dispose</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (Disposed)
+            if (m_Disposed)
             {
                 return;
             }
 
             if (disposing)
             {
-                if (DisplayWriter != null)
-                {
-                    DisplayWriter.Dispose();
-                }
-
+                DisplayWriter?.Dispose();
                 DeviceShutdown();
             }
 
-            Disposed = true;
+            m_Disposed = true;
         }
 
         #endregion Constructor / Dispose / Finalizer
@@ -261,6 +257,7 @@ namespace Waveshare.Common
         /// Display a Image on the Display
         /// </summary>
         /// <param name="rawImage">Bitmap that should be displayed</param>
+        /// <param name="dithering"></param>
         public void DisplayImage(IRawImage rawImage, bool dithering)
         {
             SendCommand(StartDataTransmissionCommand);
@@ -503,11 +500,11 @@ namespace Waveshare.Common
                 return (color1.R - color2.R) * (color1.R - color2.R);
             }
 
-            (double Y1, double U1, double V1) = GetYUV(color1);
-            (double Y2, double U2, double V2) = GetYUV(color2);
-            double diffY = Y1 - Y2;
-            double diffU = U1 - U2;
-            double diffV = V1 - V2;
+            (double y1, double u1, double v1) = GetYuv(color1);
+            (double y2, double u2, double v2) = GetYuv(color2);
+            double diffY = y1 - y2;
+            double diffU = u1 - u2;
+            double diffV = v1 - v2;
 
             return diffY * diffY + diffU * diffU + diffV * diffV;
         }
@@ -517,7 +514,7 @@ namespace Waveshare.Common
         /// </summary>
         /// <param name="color"></param>
         /// <returns></returns>
-        private (double Y, double U, double V) GetYUV(ByteColor color)
+        private (double Y, double U, double V) GetYuv(ByteColor color)
         {
             return (color.R * .299000 + color.G * .587000 + color.B * .114000,
                     color.R * -.168736 + color.G * -.331264 + color.B * .500000 + 128,
@@ -531,51 +528,51 @@ namespace Waveshare.Common
         /// <param name="valueR">Red value to add</param>
         /// <param name="valueG">Green value to add</param>
         /// <param name="valueB">Blue value to add</param>
-        protected static void AdjustRGB(ref ByteColor color, int valueR, int valueG, int valueB)
+        protected static void AdjustRgb(ref ByteColor color, int valueR, int valueG, int valueB)
         {
-            byte R, G, B;
+            byte r, g, b;
             int level = color.R + valueR;
             if (level < 0)
             {
-                R = 0;
+                r = 0;
             }
             else if (level > 255)
             {
-                R = 255;
+                r = 255;
             }
             else
             {
-                R = (byte)level;
+                r = (byte)level;
             }
 
             level = color.G + valueG;
             if (level < 0)
             {
-                G = 0;
+                g = 0;
             }
             else if (level > 255)
             {
-                G = 255;
+                g = 255;
             }
             else
             {
-                G = (byte)level;
+                g = (byte)level;
             }
 
             level = color.B + valueB;
             if (level < 0)
             {
-                B = 0;
+                b = 0;
             }
             else if (level > 255)
             {
-                B = 255;
+                b = 255;
             }
             else
             {
-                B = (byte)level;
+                b = (byte)level;
             }
-            color.SetBGR(B, G, R);
+            color.SetBGR(b, g, r);
         }
 
         /// Floyd-Steinberg Dithering
@@ -594,7 +591,7 @@ namespace Waveshare.Common
                 // Add 7/16 of the color difference to the pixel on the right
                 if (x < Width - 1)
                 {
-                    AdjustRGB(ref data[x + 1, previousLine], errorR * 7 / 16, errorG * 7 / 16, errorB * 7 / 16);
+                    AdjustRgb(ref data[x + 1, previousLine], errorR * 7 / 16, errorG * 7 / 16, errorB * 7 / 16);
                 }
 
                 if (!isLastLine)
@@ -602,16 +599,16 @@ namespace Waveshare.Common
                     // Add 3/16 of the color difference to the pixel below and to the left
                     if (x > 0)
                     {
-                        AdjustRGB(ref data[x - 1, currentLine], errorR * 3 / 16, errorG * 3 / 16, errorB * 3 / 16);
+                        AdjustRgb(ref data[x - 1, currentLine], errorR * 3 / 16, errorG * 3 / 16, errorB * 3 / 16);
                     }
 
                     // Add 5/16 of the color difference to the pixel directly below
-                    AdjustRGB(ref data[x, currentLine], errorR * 5 / 16, errorG * 5 / 16, errorB * 5 / 16);
+                    AdjustRgb(ref data[x, currentLine], errorR * 5 / 16, errorG * 5 / 16, errorB * 5 / 16);
 
                     // Add 1/16 of the color difference to the pixel below and to the right
                     if (x < Width - 1)
                     {
-                        AdjustRGB(ref data[x + 1, currentLine], errorR / 16, errorG / 16, errorB / 16);
+                        AdjustRgb(ref data[x + 1, currentLine], errorR / 16, errorG / 16, errorB / 16);
                     }
                 }
 

@@ -69,14 +69,6 @@ namespace Waveshare.Common
 
         //########################################################################################
 
-        #region Fields
-
-        private bool Disposed = false;
-
-        #endregion Fields
-
-        //########################################################################################
-
         #region Properties
 
         /// <summary>
@@ -168,11 +160,6 @@ namespace Waveshare.Common
         /// </summary>
         public void Dispose(bool disposing)
         {
-            if (Disposed)
-            {
-                return;
-            }
-
             if (disposing)
             {
                 GpioController?.Write(GpioSpiCsPin, PinValue.Low);
@@ -185,8 +172,6 @@ namespace Waveshare.Common
                 SpiDevice?.Dispose();
                 SpiDevice = null;
             }
-
-            Disposed = true;
         }
 
         public void Dispose()

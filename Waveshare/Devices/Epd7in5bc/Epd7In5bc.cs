@@ -70,12 +70,12 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        public override ByteColor[] SupportedByteColors { get; } = new ByteColor[] {ByteColors.Black, ByteColors.Gray, ByteColors.White, ByteColors.Red };
+        public override ByteColor[] SupportedByteColors { get; } = {ByteColors.Black, ByteColors.Gray, ByteColors.White, ByteColors.Red };
 
         /// <summary>
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        public override byte[] DeviceByteColors { get; } = new byte[] { 0x00, 0x02, 0x03, 0x04 };
+        public override byte[] DeviceByteColors { get; } = new byte[] { Epd7in5bcColors.Black, Epd7in5bcColors.Gray, Epd7in5bcColors.White, Epd7in5bcColors.Red };
 
         /// <summary>
         /// Display Writer assigned to the device
@@ -215,9 +215,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
+        /// <param name="rgb">color bytes</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(ByteColor rgb)
         {

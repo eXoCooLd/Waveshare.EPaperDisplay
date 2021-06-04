@@ -25,7 +25,6 @@
 
 #region Usings
 
-using System;
 using System.IO;
 using Waveshare.Common;
 
@@ -36,20 +35,20 @@ namespace Waveshare.Devices.Epd7in5b_V2
     /// <summary>
     /// Write image to Waveshare 7.5inch e-Paper V2 Black, White and Red Display
     /// </summary>
-    internal class Epd7in5b_V2Writer : EPaperDisplayWriter
+    // ReSharper disable once InconsistentNaming
+    internal class Epd7In5BV2Writer : EPaperDisplayWriter
     {
         //########################################################################################
 
         #region Fields
 
-        private readonly int RedIndex;
-        private readonly byte RedPixel;
-        private readonly int BlackIndex;
-        private readonly byte BlackPixel;
-        private readonly byte[] BlackLine;
-        private MemoryStream memStream;
-        private byte OutByte;
-        private bool Disposed = false;
+        private readonly int m_RedIndex;
+        private readonly byte m_RedPixel;
+        private readonly int m_BlackIndex;
+        private readonly byte m_BlackPixel;
+        private readonly byte[] m_BlackLine;
+        private MemoryStream m_MemStream;
+        private byte m_OutByte;
 
         #endregion Fields
 
@@ -57,44 +56,29 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         #region Constructor / Dispose / Finalizer
 
-        internal Epd7in5b_V2Writer(EPaperDisplayBase display) 
+        internal Epd7In5BV2Writer(EPaperDisplayBase display) 
             : base (display)
         {
-            memStream = new MemoryStream();
-            RedIndex = display.GetColorIndex(ByteColors.Red);
-            RedPixel = display.DeviceByteColors[RedIndex];
-            BlackIndex = display.GetColorIndex(ByteColors.Black);
-            BlackPixel = display.DeviceByteColors[BlackIndex];
-            BlackLine = display.GetColoredLineOnDevice(ByteColors.Black);
+            m_MemStream = new MemoryStream();
+            m_RedIndex = display.GetColorIndex(ByteColors.Red);
+            m_RedPixel = display.DeviceByteColors[m_RedIndex];
+            m_BlackIndex = display.GetColorIndex(ByteColors.Black);
+            m_BlackPixel = display.DeviceByteColors[m_BlackIndex];
+            m_BlackLine = display.GetColoredLineOnDevice(ByteColors.Black);
         }
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            if (Disposed)
-            {
-                return;
-            }
 
-            if (disposing && memStream != null)
+            if (disposing && m_MemStream != null)
             {
                 Finish();
-                memStream.Close();
-                memStream.Dispose();
-                memStream = null;
+                m_MemStream.Close();
+                m_MemStream.Dispose();
+                m_MemStream = null;
             }
-
-            Disposed = true;
         }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~Epd7in5b_V2Writer() => Dispose(false);
 
         #endregion Constructor / Dispose / Finalizer
 
@@ -105,41 +89,41 @@ namespace Waveshare.Devices.Epd7in5b_V2
         public override void Finish()
         {
             base.Finish();
-            if (memStream.Length > 0)
+            if (m_MemStream.Length > 0)
             {
                 Display.SendCommand((byte)Epd7In5b_V2Commands.DataStartTransmission2);
-                memStream.Position = 0;
-                Display.SendData(memStream);
+                m_MemStream.Position = 0;
+                Display.SendData(m_MemStream);
             }
-            OutByte = 0;
+            m_OutByte = 0;
         }
 
         public override void Write(int index)
         {
             byte value;
-            if (index == RedIndex)
+            if (index == m_RedIndex)
             {
-                base.Write(BlackIndex);
-                value = RedPixel;
+                base.Write(m_BlackIndex);
+                value = m_RedPixel;
             }
             else
             {
                 base.Write(index);
-                value = BlackPixel;
+                value = m_BlackPixel;
             }
 
             if (PixelPerByte == 1)
             {
-                memStream.WriteByte(value);
+                m_MemStream.WriteByte(value);
             }
             else
             {
-                OutByte <<= BitShift;
-                OutByte |= value;
+                m_OutByte <<= BitShift;
+                m_OutByte |= value;
                 if (ByteCount % PixelPerByte == PixelThreshold)
                 {
-                    memStream.WriteByte(OutByte);
-                    OutByte = 0;
+                    m_MemStream.WriteByte(m_OutByte);
+                    m_OutByte = 0;
                 }
             }
         }
@@ -151,7 +135,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
                 Write(WhiteIndex);
             }
 
-            memStream.Write(BlackLine, 0, BlackLine.Length);
+            m_MemStream.Write(m_BlackLine, 0, m_BlackLine.Length);
             base.WriteBlankLine();
         }
 

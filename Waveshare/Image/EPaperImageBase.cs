@@ -219,13 +219,6 @@ namespace Waveshare.Image
         /// <returns></returns>
         protected abstract IRawImage LoadImage(T image);
 
-        /// <summary>
-        /// Load a Image with dithering into the RawImage
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        //protected abstract IRawImage LoadImageWithDithering(T image);
-
         #endregion Protected Methods
 
         //########################################################################################

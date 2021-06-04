@@ -34,7 +34,7 @@ namespace Waveshare.Common
     /// <summary>
     /// Structure for holding a three byte color
     /// </summary>
-    public struct ByteColor : IEquatable<ByteColor>
+    internal struct ByteColor : IEquatable<ByteColor>
     {
         public byte R { get; private set; }
         public byte G { get; private set; }
@@ -65,6 +65,7 @@ namespace Waveshare.Common
             }
         }
 
+        // ReSharper disable once InconsistentNaming
         public void SetBGR(byte blue, byte green, byte red, bool desaturate = false)
         {
             R = red;
@@ -77,7 +78,10 @@ namespace Waveshare.Common
 
         public bool Equals(ByteColor p) => R == p.R && G == p.G && B == p.B;
 
+
+        // ReSharper disable NonReadonlyMemberInGetHashCode
         public override int GetHashCode() => (R, G, B).GetHashCode();
+        // ReSharper restore NonReadonlyMemberInGetHashCode
 
         public static bool operator ==(ByteColor lhs, ByteColor rhs) => lhs.Equals(rhs);
 

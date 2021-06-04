@@ -57,6 +57,7 @@ namespace Waveshare.Interfaces
         /// Display a Image on the Display
         /// </summary>
         /// <param name="rawImage">Bitmap that should be displayed</param>
+        /// <param name="dithering">Use Dithering to display the image</param>
         void DisplayImage(IRawImage rawImage, bool dithering);
     }
 }

@@ -35,7 +35,7 @@ namespace Waveshare.Common
     /// <summary>
     /// Write image to Waveshare E-Paper Display
     /// </summary>
-    public class EPaperDisplayWriter : IDisposable
+    internal class EPaperDisplayWriter : IDisposable
     {
         //########################################################################################
 
@@ -49,10 +49,10 @@ namespace Waveshare.Common
         protected readonly byte BitShift;
         protected readonly int WhiteIndex;
         protected readonly byte[] WhiteLine;
-        private MemoryStream memStream;
-        private byte OutByte;
+        private MemoryStream m_MemoryStream;
+        private byte m_OutByte;
         private int m_ByteCount = -1;
-        private bool Disposed = false;
+        private bool m_Disposed;
 
         #endregion Fields
 
@@ -75,30 +75,23 @@ namespace Waveshare.Common
             PixelPerByte = display.PixelPerByte;
             BitShift = (byte)(8 / PixelPerByte);
             PixelThreshold = PixelPerByte - 1;
-            memStream = new MemoryStream();
+            m_MemoryStream = new MemoryStream();
             WhiteIndex = display.GetColorIndex(ByteColors.White);
             WhiteLine = display.GetColoredLineOnDevice(ByteColors.White);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (Disposed)
-            {
-                return;
-            }
-
-            if (disposing && memStream != null)
+            if (disposing && m_MemoryStream != null)
             {
                 Finish();
-                memStream.Close();
-                memStream.Dispose();
-                memStream = null;
+                m_MemoryStream.Close();
+                m_MemoryStream.Dispose();
+                m_MemoryStream = null;
             }
-
-            Disposed = true;
         }
 
-        public virtual void Dispose()
+        public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -115,17 +108,17 @@ namespace Waveshare.Common
         public virtual void Finish()
         {
             Flush();
-            OutByte = 0;
+            m_OutByte = 0;
             m_ByteCount = -1;
         }
 
         public virtual void Flush()
         {
-            if (memStream != null && memStream.Length > 0)
+            if (m_MemoryStream != null && m_MemoryStream.Length > 0)
             {
-                memStream.Position = 0;
-                Display.SendData(memStream);
-                memStream.SetLength(0);
+                m_MemoryStream.Position = 0;
+                Display.SendData(m_MemoryStream);
+                m_MemoryStream.SetLength(0);
             }
         }
 
@@ -135,21 +128,21 @@ namespace Waveshare.Common
             m_ByteCount++;
             if (PixelPerByte == 1)
             {
-                memStream.WriteByte(value);
-                if (memStream.Length >= StreamThreshold)
+                m_MemoryStream.WriteByte(value);
+                if (m_MemoryStream.Length >= StreamThreshold)
                 {
                     Flush();
                 }
             }
             else
             {
-                OutByte <<= BitShift;
-                OutByte |= value;
+                m_OutByte <<= BitShift;
+                m_OutByte |= value;
                 if (m_ByteCount % PixelPerByte == PixelThreshold)
                 {
-                    memStream.WriteByte(OutByte);
-                    OutByte = 0;
-                    if (memStream.Length >= StreamThreshold)
+                    m_MemoryStream.WriteByte(m_OutByte);
+                    m_OutByte = 0;
+                    if (m_MemoryStream.Length >= StreamThreshold)
                     {
                         Flush();
                     }
@@ -172,7 +165,7 @@ namespace Waveshare.Common
                 Write(WhiteIndex);
             }
 
-            memStream.Write(WhiteLine, 0, WhiteLine.Length);
+            m_MemoryStream.Write(WhiteLine, 0, WhiteLine.Length);
         }
 
         public virtual void WriteBlankPixel()
