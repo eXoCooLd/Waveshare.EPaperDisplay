@@ -38,6 +38,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
     // ReSharper disable once InconsistentNaming
     internal class Epd7In5BV2Writer : EPaperDisplayWriter
     {
+
         //########################################################################################
 
         #region Fields
@@ -56,6 +57,10 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         #region Constructor / Dispose / Finalizer
 
+        /// <summary>
+        /// Constructor with E-Paper Display
+        /// </summary>
+        /// <param name="display"></param>
         internal Epd7In5BV2Writer(EPaperDisplayBase display) 
             : base (display)
         {
@@ -67,6 +72,10 @@ namespace Waveshare.Devices.Epd7in5b_V2
             m_BlackLine = display.GetColoredLineOnDevice(ByteColors.Black);
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -140,5 +149,8 @@ namespace Waveshare.Devices.Epd7in5b_V2
         }
 
         #endregion Public Methods
+
+        //########################################################################################
+
     }
 }

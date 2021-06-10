@@ -23,6 +23,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
+using System.IO;
 using Waveshare.Common;
 
 namespace Waveshare.Interfaces
@@ -38,14 +39,14 @@ namespace Waveshare.Interfaces
         int ColorBytesPerPixel { get; set; }
 
         /// <summary>
-        /// Supported Colors of the E-Paper Device
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        ByteColor[] SupportedByteColors { get; }
+        byte[] DeviceByteColors { get; }
 
         /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// Pixels per Byte on the Device
         /// </summary>
-        IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
+        int PixelPerByte { get; }
 
         /// <summary>
         /// Initialize the Display with the Hardware Interface
@@ -59,5 +60,32 @@ namespace Waveshare.Interfaces
         /// <param name="rawImage">Bitmap that should be displayed</param>
         /// <param name="dithering">Use Dithering to display the image</param>
         void DisplayImage(IRawImage rawImage, bool dithering);
+
+        /// <summary>
+        /// Gets the index for the supported color closest to a color
+        /// </summary>
+        /// <param name="color">Color to look up</param>
+        /// <returns>Color index of closest supported color</returns>
+        int GetColorIndex(ByteColor color);
+
+
+        /// <summary>
+        /// Get a colored scan line on the device
+        /// </summary>
+        /// <param name="rgb"></param>
+        /// <returns></returns>
+        byte[] GetColoredLineOnDevice(ByteColor rgb);
+
+        /// <summary>
+        /// Send a Command to the Display
+        /// </summary>
+        /// <param name="command"></param>
+        void SendCommand(byte command);
+
+        /// <summary>
+        /// Send a stream to the Display
+        /// </summary>
+        /// <param name="stream"></param>
+        void SendData(MemoryStream stream);
     }
 }

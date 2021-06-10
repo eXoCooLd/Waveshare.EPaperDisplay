@@ -45,6 +45,9 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         #region Fields
 
+        /// <summary>
+        /// Buffered Display Writer
+        /// </summary>
         private EPaperDisplayWriter m_DisplayWriter;
 
         #endregion Fields
@@ -71,12 +74,12 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        public override ByteColor[] SupportedByteColors { get; } = new ByteColor[] { ByteColors.White, ByteColors.Black, ByteColors.Red };
+        public override ByteColor[] SupportedByteColors { get; } = { ByteColors.White, ByteColors.Black, ByteColors.Red };
 
         /// <summary>
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        public override byte[] DeviceByteColors { get; } = new byte[] { 0x01, 0x00, 0x01 };
+        public override byte[] DeviceByteColors { get; } = { Epd7In5b_V2Colors.White, Epd7In5b_V2Colors.Black, Epd7In5b_V2Colors.Red };
 
         /// <summary>
         /// Display Writer assigned to the device
@@ -125,7 +128,8 @@ namespace Waveshare.Devices.Epd7in5b_V2
         }
 
         /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
+        /// Power the controller on.
+        /// Do not use with SleepMode.
         /// </summary>
         public override void PowerOn()
         {
@@ -134,7 +138,8 @@ namespace Waveshare.Devices.Epd7in5b_V2
         }
 
         /// <summary>
-        /// Power the controller off.  Do not use with SleepMode.
+        /// Power the controller off.
+        /// Do not use with SleepMode.
         /// </summary>
         public override void PowerOff()
         {
@@ -238,7 +243,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
                 rgb.Desaturate();
             }
 
-            return (byte)(rgb.R >= 128 ? 1 : 0);
+            return rgb.R >= 128 ? Epd7In5b_V2Colors.Red : Epd7In5b_V2Colors.NotRed;
         }
 
         #endregion Protected Methods

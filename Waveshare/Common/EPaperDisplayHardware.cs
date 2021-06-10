@@ -158,7 +158,7 @@ namespace Waveshare.Common
         /// <summary>
         /// Dispose the SPI and GPIO Devices
         /// </summary>
-        public void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {
@@ -174,12 +174,18 @@ namespace Waveshare.Common
             }
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~EPaperDisplayHardware() => Dispose(false);
 
         #endregion Constructor / Dispose / Finalizer
@@ -232,6 +238,7 @@ namespace Waveshare.Common
         //########################################################################################
 
         #region Private Methods
+
         /// <summary>
         /// Create the GPIO Controller
         /// </summary>

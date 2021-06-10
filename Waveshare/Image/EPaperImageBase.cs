@@ -26,7 +26,6 @@
 #region Usings
 
 using System;
-using Waveshare.Common;
 using Waveshare.Interfaces;
 
 #endregion Usings
@@ -58,11 +57,6 @@ namespace Waveshare.Image
         /// Pixel Height of the Display
         /// </summary>
         public int Height => EPaperDisplay.Height;
-
-        /// <summary>
-        /// Supported Colors of the E-Paper Device
-        /// </summary>
-        protected ByteColor[] SupportedByteColors => EPaperDisplay.SupportedByteColors;
 
         #endregion Properties
 

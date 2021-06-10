@@ -25,53 +25,15 @@
 
 #region Usings
 
-using System;
-using Waveshare.Interfaces;
-
 #endregion Usings
 
-namespace Waveshare.Image.Bitmap
+namespace Waveshare.Interfaces
 {
     /// <summary>
-    /// System.Drawing.Bitmap Image Loader
+    /// Interface for EPaperDisplays with System Drawing Bitmap
     /// </summary>
-    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
+    public interface IEPaperDisplayBitmap : IEPaperDisplayImage<System.Drawing.Bitmap>
     {
-
-        //########################################################################################
-
-        #region Constructor / Dispose / Finalizer
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="ePaperDisplay"></param>
-        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
-        {
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
-        #region Protected Methods
-
-        /// <summary>
-        /// Load the System.Drawing.Bitmap into a RawImage
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
-        {
-            var maxWidth = Math.Min(Width, image.Width);
-            var maxHeight = Math.Min(Height, image.Height);
-
-            return new BitmapRawImage(image, maxWidth, maxHeight);
-        }
-
-        #endregion Protected Methods
-
-        //########################################################################################
-
+        
     }
 }

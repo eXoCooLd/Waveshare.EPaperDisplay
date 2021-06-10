@@ -36,11 +36,44 @@ namespace Waveshare.Common
     /// </summary>
     internal struct ByteColor : IEquatable<ByteColor>
     {
+
+        //########################################################################################
+
+        #region Properties
+
+        /// <summary>
+        /// Red
+        /// </summary>
         public byte R { get; private set; }
+
+        /// <summary>
+        /// Green
+        /// </summary>
         public byte G { get; private set; }
+
+        /// <summary>
+        /// Blue
+        /// </summary>
         public byte B { get; private set; }
+
+        /// <summary>
+        /// Check if the Color is Monochrom
+        /// </summary>
         public bool IsMonochrome { get; private set; }
 
+        #endregion Properties
+
+        //########################################################################################
+
+        #region Constructor / Dispose / Finalizer
+
+        /// <summary>
+        /// Constructor with the color Bytes
+        /// </summary>
+        /// <param name="red"></param>
+        /// <param name="green"></param>
+        /// <param name="blue"></param>
+        /// <param name="desaturate"></param>
         public ByteColor(byte red, byte green, byte blue, bool desaturate = false)
             : this()
         {
@@ -50,6 +83,15 @@ namespace Waveshare.Common
             Update(desaturate);
         }
 
+        #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
+        #region Public Methods
+
+        /// <summary>
+        /// Desaturate the color
+        /// </summary>
         public void Desaturate()
         {
             if (R != G || G != B)
@@ -65,6 +107,13 @@ namespace Waveshare.Common
             }
         }
 
+        /// <summary>
+        /// Set Color Bytes blue, green, red
+        /// </summary>
+        /// <param name="blue"></param>
+        /// <param name="green"></param>
+        /// <param name="red"></param>
+        /// <param name="desaturate"></param>
         // ReSharper disable once InconsistentNaming
         public void SetBGR(byte blue, byte green, byte red, bool desaturate = false)
         {
@@ -74,19 +123,54 @@ namespace Waveshare.Common
             Update(desaturate);
         }
 
+        /// <summary>
+        /// Override the Equals Operator
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj) => obj is ByteColor other && this.Equals(other);
 
+        /// <summary>
+        /// Equals Operator
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
         public bool Equals(ByteColor p) => R == p.R && G == p.G && B == p.B;
 
-
+        /// <summary>
+        /// Override the HashCode generation
+        /// </summary>
+        /// <returns></returns>
         // ReSharper disable NonReadonlyMemberInGetHashCode
         public override int GetHashCode() => (R, G, B).GetHashCode();
         // ReSharper restore NonReadonlyMemberInGetHashCode
 
+        /// <summary>
+        /// Override the Equals Operator
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
         public static bool operator ==(ByteColor lhs, ByteColor rhs) => lhs.Equals(rhs);
 
+        /// <summary>
+        /// Override the Not Equals Operator
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
         public static bool operator !=(ByteColor lhs, ByteColor rhs) => !lhs.Equals(rhs);
 
+        #endregion Public Methods
+
+        //########################################################################################
+
+        #region Private Methods
+
+        /// <summary>
+        /// Update the Color
+        /// </summary>
+        /// <param name="desaturate"></param>
         private void Update(bool desaturate)
         {
             IsMonochrome = (R == G && G == B);
@@ -96,5 +180,10 @@ namespace Waveshare.Common
                 IsMonochrome = true;
             }
         }
+
+        #endregion Private Methods
+
+        //########################################################################################
+
     }
 }

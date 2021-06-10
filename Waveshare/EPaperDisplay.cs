@@ -26,7 +26,6 @@
 #region Usings
 
 using System;
-using System.Drawing;
 using Waveshare.Common;
 using Waveshare.Devices;
 using Waveshare.Devices.Epd7in5_V2;
@@ -65,7 +64,7 @@ namespace Waveshare
         /// </summary>
         /// <param name="displayType"></param>
         /// <returns></returns>
-        public static IEPaperDisplayImage<Bitmap> Create(EPaperDisplayType displayType)
+        public static IEPaperDisplayBitmap Create(EPaperDisplayType displayType)
         {
             var ePaperDisplay = CreateEPaperDisplay(displayType);
             return ePaperDisplay != null ? new BitmapLoader(ePaperDisplay) : null;

@@ -44,6 +44,9 @@ namespace Waveshare.Devices.Epd7in5bc
 
         #region Fields
 
+        /// <summary>
+        /// Buffered Display Writer
+        /// </summary>
         private EPaperDisplayWriter m_DisplayWriter;
 
         #endregion Fields
@@ -75,7 +78,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        public override byte[] DeviceByteColors { get; } = new byte[] { Epd7in5bcColors.Black, Epd7in5bcColors.Gray, Epd7in5bcColors.White, Epd7in5bcColors.Red };
+        public override byte[] DeviceByteColors { get; } = { Epd7in5bcColors.Black, Epd7in5bcColors.Gray, Epd7in5bcColors.White, Epd7in5bcColors.Red };
 
         /// <summary>
         /// Display Writer assigned to the device
@@ -238,12 +241,6 @@ namespace Waveshare.Devices.Epd7in5bc
         }
 
         #endregion Protected Methods
-
-        //########################################################################################
-
-        #region Internal Methods
-
-        #endregion Internal Methods
 
         //########################################################################################
 

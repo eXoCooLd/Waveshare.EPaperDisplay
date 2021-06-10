@@ -45,6 +45,9 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         #region Fields
 
+        /// <summary>
+        /// Buffered Display Writer
+        /// </summary>
         private EPaperDisplayWriter m_DisplayWriter;
 
         #endregion Fields
@@ -71,12 +74,12 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <summary>
         /// Supported Colors of the E-Paper Device
         /// </summary>
-        public override ByteColor[] SupportedByteColors { get; } = new ByteColor[] { ByteColors.White, ByteColors.Black };
+        public override ByteColor[] SupportedByteColors { get; } = { ByteColors.White, ByteColors.Black };
 
         /// <summary>
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        public override byte[] DeviceByteColors { get; } = new byte[] { 0x00, 0x01 };
+        public override byte[] DeviceByteColors { get; } = { Epd7In5_V2Colors.White, Epd7In5_V2Colors.Black };
 
         /// <summary>
         /// Display Writer assigned to the device
@@ -226,7 +229,7 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected override byte ColorToByte(ByteColor rgb)
         {
-            return rgb.R < 128 ? (byte) 1 : (byte) 0;
+            return rgb.R < 128 ? Epd7In5_V2Colors.Black : Epd7In5_V2Colors.White;
         }
 
         #endregion Protected Methods
@@ -243,7 +246,6 @@ namespace Waveshare.Devices.Epd7in5_V2
         {
             return new EPaperDisplayWriter(this);
         }
-
 
         /// <summary>
         /// Helper to send a Command based o the Epd7In5_V2Commands Enum
@@ -270,7 +272,6 @@ namespace Waveshare.Devices.Epd7in5_V2
                 SendData(outputLine);
             }
         }
-
 
         #endregion Private Methods
 

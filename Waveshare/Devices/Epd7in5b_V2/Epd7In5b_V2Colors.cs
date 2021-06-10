@@ -25,53 +25,36 @@
 
 #region Usings
 
-using System;
-using Waveshare.Interfaces;
-
 #endregion Usings
 
-namespace Waveshare.Image.Bitmap
+namespace Waveshare.Devices.Epd7in5b_V2
 {
     /// <summary>
-    /// System.Drawing.Bitmap Image Loader
+    /// Byte values for the supported hardware colors
     /// </summary>
-    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
+    // ReSharper disable once InconsistentNaming
+    internal class Epd7In5b_V2Colors
     {
 
-        //########################################################################################
-
-        #region Constructor / Dispose / Finalizer
+        /// <summary>
+        /// Byte value for color black
+        /// </summary>
+        public const byte Black = 0x00;
 
         /// <summary>
-        /// Constructor
+        /// Byte value for color white
         /// </summary>
-        /// <param name="ePaperDisplay"></param>
-        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
-        {
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
-        #region Protected Methods
+        public const byte White = 0x01;
 
         /// <summary>
-        /// Load the System.Drawing.Bitmap into a RawImage
+        /// Byte value for color red
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
-        {
-            var maxWidth = Math.Min(Width, image.Width);
-            var maxHeight = Math.Min(Height, image.Height);
+        public const byte Red = 0x01;
 
-            return new BitmapRawImage(image, maxWidth, maxHeight);
-        }
-
-        #endregion Protected Methods
-
-        //########################################################################################
+        /// <summary>
+        /// Byte value for color not red
+        /// </summary>
+        public const byte NotRed = 0x00;
 
     }
 }

@@ -27,6 +27,7 @@
 
 using System;
 using System.IO;
+using Waveshare.Interfaces;
 
 #endregion Usings
 
@@ -37,11 +38,12 @@ namespace Waveshare.Common
     /// </summary>
     internal class EPaperDisplayWriter : IDisposable
     {
+
         //########################################################################################
 
         #region Fields
 
-        internal readonly EPaperDisplayBase Display;
+        internal readonly IEPaperDisplayInternal Display;
         protected readonly int Width;
         protected readonly int PixelPerByte;
         protected readonly int PixelThreshold;
@@ -52,7 +54,6 @@ namespace Waveshare.Common
         private MemoryStream m_MemoryStream;
         private byte m_OutByte;
         private int m_ByteCount = -1;
-        private bool m_Disposed;
 
         #endregion Fields
 
@@ -68,7 +69,7 @@ namespace Waveshare.Common
 
         #region Constructor / Dispose / Finalizer
 
-        internal EPaperDisplayWriter(EPaperDisplayBase display)
+        internal EPaperDisplayWriter(IEPaperDisplayInternal display)
         {
             Display = display;
             Width = display.Width;
@@ -150,14 +151,6 @@ namespace Waveshare.Common
             }
         }
 
-        public virtual void Write(int[] indexes)
-        {
-            foreach (int index in indexes)
-            {
-                Write(index);
-            }
-        }
-
         public virtual void WriteBlankLine()
         {
             while (PixelPerByte > 1 && m_ByteCount % PixelPerByte != PixelThreshold)
@@ -176,5 +169,6 @@ namespace Waveshare.Common
         #endregion Public Methods
 
         //########################################################################################
+
     }
 }
