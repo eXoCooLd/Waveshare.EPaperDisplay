@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2021 Andre Wehrli
+// Copyright(c) 2019 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,53 +26,54 @@
 #region Usings
 
 using System;
-using Waveshare.Interfaces;
-using Waveshare.Interfaces.Internal;
+using System.Device.Gpio;
+using System.IO;
 
 #endregion Usings
 
-namespace Waveshare.Image.Bitmap
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// System.Drawing.Bitmap Image Loader
+    /// E-Paper Hardware Interface for GPIO and SPI Bus
     /// </summary>
-    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
+    internal interface IEPaperDisplayHardware : IDisposable
     {
-
-        //########################################################################################
-
-        #region Constructor / Dispose / Finalizer
+        /// <summary>
+        /// GPIO Reset Pin
+        /// </summary>
+        PinValue ResetPin { get; set; }
 
         /// <summary>
-        /// Constructor
+        /// GPIO SPI DC Pin
         /// </summary>
-        /// <param name="ePaperDisplay"></param>
-        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
-        {
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
-        #region Protected Methods
+        PinValue SpiDcPin { get; set; }
 
         /// <summary>
-        /// Load the System.Drawing.Bitmap into a RawImage
+        /// GPIO SPI CS Pin
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
-        {
-            var maxWidth = Math.Min(Width, image.Width);
-            var maxHeight = Math.Min(Height, image.Height);
+        PinValue SpiCsPin { get; set; }
 
-            return new BitmapRawImage(image, maxWidth, maxHeight);
-        }
+        /// <summary>
+        /// GPIO Busy Pin
+        /// </summary>
+        PinValue BusyPin { get; set; }
 
-        #endregion Protected Methods
+        /// <summary>
+        /// Write data to the SPI device
+        /// </summary>
+        /// <param name="stream">The stream that contains the data to be written to the SPI device</param>
+        void Write(MemoryStream stream);
 
-        //########################################################################################
+        /// <summary>
+        /// Write data to the SPI device
+        /// </summary>
+        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
+        void Write(byte[] buffer);
 
+        /// <summary>
+        /// Write a byte to the SPI device
+        /// </summary>
+        /// <param name="value">The byte to be written to the SPI device</param>
+        void WriteByte(byte value);
     }
 }

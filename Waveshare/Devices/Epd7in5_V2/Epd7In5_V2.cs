@@ -43,17 +43,6 @@ namespace Waveshare.Devices.Epd7in5_V2
 
         //########################################################################################
 
-        #region Fields
-
-        /// <summary>
-        /// Buffered Display Writer
-        /// </summary>
-        private EPaperDisplayWriter m_DisplayWriter;
-
-        #endregion Fields
-
-        //########################################################################################
-
         #region Properties
 
         /// <summary>
@@ -80,11 +69,6 @@ namespace Waveshare.Devices.Epd7in5_V2
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
         public override byte[] DeviceByteColors { get; } = { Epd7In5_V2Colors.White, Epd7In5_V2Colors.Black };
-
-        /// <summary>
-        /// Display Writer assigned to the device
-        /// </summary>
-        public override EPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
 
         /// <summary>
         /// Get Status Command
@@ -237,15 +221,6 @@ namespace Waveshare.Devices.Epd7in5_V2
         //########################################################################################
 
         #region Private Methods
-
-        /// <summary>
-        /// Generate a display writer for this device
-        /// </summary>
-        /// <returns>Returns a display writer</returns>
-        private EPaperDisplayWriter GetDisplayWriter()
-        {
-            return new EPaperDisplayWriter(this);
-        }
 
         /// <summary>
         /// Helper to send a Command based o the Epd7In5_V2Commands Enum

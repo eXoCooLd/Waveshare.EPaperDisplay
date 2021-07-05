@@ -23,10 +23,14 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
+#region Usings
+
 using System.IO;
 using Waveshare.Common;
 
-namespace Waveshare.Interfaces
+#endregion Usings
+
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
     /// Internal Interface to initialize with the Hardware Interface for GPIO and SPI Bus

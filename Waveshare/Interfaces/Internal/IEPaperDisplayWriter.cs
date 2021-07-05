@@ -29,36 +29,32 @@ using System;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// Interface for the RAW Image that should be displayed
+    /// Bufferd display writer
     /// </summary>
-    internal interface IRawImage : IDisposable
+    internal interface IEPaperDisplayWriter : IDisposable
     {
         /// <summary>
-        /// Width of the Image or Device Width
+        /// Send the Data to the Hardware
         /// </summary>
-        int Width { get; }
+        void Finish();
 
         /// <summary>
-        /// Height of the Image or Device Height
+        /// Write to the Buffer
         /// </summary>
-        int Height { get; }
+        /// <param name="index"></param>
+        void Write(int index);
 
         /// <summary>
-        /// Length of a ScanLine in Bytes
+        /// Write a Blank Line in the Buffer
         /// </summary>
-        int Stride { get; }
+        void WriteBlankLine();
 
         /// <summary>
-        /// Used Bytes per Pixel
+        /// Write a Blank Pixel
         /// </summary>
-        int BytesPerPixel { get; }
-
-        /// <summary>
-        /// IntPointer to the Byte Array of the Image
-        /// </summary>
-        IntPtr ScanLine { get; }
+        void WriteBlankPixel();
     }
 }

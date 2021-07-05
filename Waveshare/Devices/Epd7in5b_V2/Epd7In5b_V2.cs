@@ -27,6 +27,7 @@
 
 using System.Threading;
 using Waveshare.Common;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -40,17 +41,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
     // ReSharper disable once InconsistentNaming
     internal sealed class Epd7In5b_V2 : EPaperDisplayBase
     {
-
-        //########################################################################################
-
-        #region Fields
-
-        /// <summary>
-        /// Buffered Display Writer
-        /// </summary>
-        private EPaperDisplayWriter m_DisplayWriter;
-
-        #endregion Fields
 
         //########################################################################################
 
@@ -80,11 +70,6 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
         public override byte[] DeviceByteColors { get; } = { Epd7In5b_V2Colors.White, Epd7In5b_V2Colors.Black, Epd7In5b_V2Colors.Red };
-
-        /// <summary>
-        /// Display Writer assigned to the device
-        /// </summary>
-        public override EPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
 
         /// <summary>
         /// Get Status Command
@@ -246,21 +231,21 @@ namespace Waveshare.Devices.Epd7in5b_V2
             return rgb.R >= 128 ? Epd7In5b_V2Colors.Red : Epd7In5b_V2Colors.NotRed;
         }
 
+        /// <summary>
+        /// Generate a display writer for this device
+        /// </summary>
+        /// <returns>Returns a display writer</returns>
+        protected override IEPaperDisplayWriter GetDisplayWriter()
+        {
+            return new Epd7In5BV2Writer(this);
+        }
+
         #endregion Protected Methods
 
         //########################################################################################
 
 
         #region Private Methods
-
-        /// <summary>
-        /// Generate a display writer for this device
-        /// </summary>
-        /// <returns>Returns a display writer</returns>
-        private EPaperDisplayWriter GetDisplayWriter()
-        {
-            return new Epd7In5BV2Writer(this);
-        }
 
         /// <summary>
         /// Check if a Pixel is Red

@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,54 +24,41 @@
 #endregion Copyright
 
 #region Usings
+
 using System;
-using System.Device.Gpio;
-using System.IO;
+
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// E-Paper Hardware Interface for GPIO and SPI Bus
+    /// Interface for the RAW Image that should be displayed
     /// </summary>
-    internal interface IEPaperDisplayHardware : IDisposable
+    internal interface IRawImage : IDisposable
     {
         /// <summary>
-        /// GPIO Reset Pin
+        /// Width of the Image or Device Width
         /// </summary>
-        PinValue ResetPin { get; set; }
+        int Width { get; }
 
         /// <summary>
-        /// GPIO SPI DC Pin
+        /// Height of the Image or Device Height
         /// </summary>
-        PinValue SpiDcPin { get; set; }
+        int Height { get; }
 
         /// <summary>
-        /// GPIO SPI CS Pin
+        /// Length of a ScanLine in Bytes
         /// </summary>
-        PinValue SpiCsPin { get; set; }
+        int Stride { get; }
 
         /// <summary>
-        /// GPIO Busy Pin
+        /// Used Bytes per Pixel
         /// </summary>
-        PinValue BusyPin { get; set; }
+        int BytesPerPixel { get; }
 
         /// <summary>
-        /// Write data to the SPI device
+        /// IntPointer to the Byte Array of the Image
         /// </summary>
-        /// <param name="stream">The stream that contains the data to be written to the SPI device</param>
-        void Write(MemoryStream stream);
-
-        /// <summary>
-        /// Write data to the SPI device
-        /// </summary>
-        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
-        void Write(byte[] buffer);
-
-        /// <summary>
-        /// Write a byte to the SPI device
-        /// </summary>
-        /// <param name="value">The byte to be written to the SPI device</param>
-        void WriteByte(byte value);
+        IntPtr ScanLine { get; }
     }
 }

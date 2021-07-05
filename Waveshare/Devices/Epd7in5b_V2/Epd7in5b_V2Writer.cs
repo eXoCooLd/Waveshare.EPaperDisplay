@@ -27,6 +27,7 @@
 
 using System.IO;
 using Waveshare.Common;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -43,12 +44,39 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         #region Fields
 
+        /// <summary>
+        /// Pallet color index on device for Red
+        /// </summary>
         private readonly int m_RedIndex;
+
+        /// <summary>
+        /// Byte value for color Red
+        /// </summary>
         private readonly byte m_RedPixel;
+
+        /// <summary>
+        /// Pallet color index on device for Black
+        /// </summary>
         private readonly int m_BlackIndex;
+
+        /// <summary>
+        /// Byte value for color black
+        /// </summary>
         private readonly byte m_BlackPixel;
+
+        /// <summary>
+        /// Black line on the device
+        /// </summary>
         private readonly byte[] m_BlackLine;
-        private MemoryStream m_MemStream;
+
+        /// <summary>
+        /// Layer 2 Buffer for the pixels on the device
+        /// </summary>
+        private MemoryStream m_Layer2MemoryStream;
+
+        /// <summary>
+        /// Output bytes
+        /// </summary>
         private byte m_OutByte;
 
         #endregion Fields
@@ -61,10 +89,10 @@ namespace Waveshare.Devices.Epd7in5b_V2
         /// Constructor with E-Paper Display
         /// </summary>
         /// <param name="display"></param>
-        internal Epd7In5BV2Writer(EPaperDisplayBase display) 
+        public Epd7In5BV2Writer(IEPaperDisplayInternal display) 
             : base (display)
         {
-            m_MemStream = new MemoryStream();
+            m_Layer2MemoryStream = new MemoryStream();
             m_RedIndex = display.GetColorIndex(ByteColors.Red);
             m_RedPixel = display.DeviceByteColors[m_RedIndex];
             m_BlackIndex = display.GetColorIndex(ByteColors.Black);
@@ -80,12 +108,12 @@ namespace Waveshare.Devices.Epd7in5b_V2
         {
             base.Dispose(disposing);
 
-            if (disposing && m_MemStream != null)
+            if (disposing && m_Layer2MemoryStream != null)
             {
                 Finish();
-                m_MemStream.Close();
-                m_MemStream.Dispose();
-                m_MemStream = null;
+                m_Layer2MemoryStream.Close();
+                m_Layer2MemoryStream.Dispose();
+                m_Layer2MemoryStream = null;
             }
         }
 
@@ -95,18 +123,25 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
         #region Public Methods
 
+        /// <summary>
+        /// Send the Data to the Hardware
+        /// </summary>
         public override void Finish()
         {
             base.Finish();
-            if (m_MemStream.Length > 0)
+            if (m_Layer2MemoryStream.Length > 0)
             {
                 Display.SendCommand((byte)Epd7In5b_V2Commands.DataStartTransmission2);
-                m_MemStream.Position = 0;
-                Display.SendData(m_MemStream);
+                m_Layer2MemoryStream.Position = 0;
+                Display.SendData(m_Layer2MemoryStream);
             }
             m_OutByte = 0;
         }
 
+        /// <summary>
+        /// Write to the Buffer
+        /// </summary>
+        /// <param name="index"></param>
         public override void Write(int index)
         {
             byte value;
@@ -123,7 +158,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
 
             if (PixelPerByte == 1)
             {
-                m_MemStream.WriteByte(value);
+                m_Layer2MemoryStream.WriteByte(value);
             }
             else
             {
@@ -131,12 +166,15 @@ namespace Waveshare.Devices.Epd7in5b_V2
                 m_OutByte |= value;
                 if (ByteCount % PixelPerByte == PixelThreshold)
                 {
-                    m_MemStream.WriteByte(m_OutByte);
+                    m_Layer2MemoryStream.WriteByte(m_OutByte);
                     m_OutByte = 0;
                 }
             }
         }
 
+        /// <summary>
+        /// Write a Blank Line in the Buffer
+        /// </summary>
         public override void WriteBlankLine()
         {
             while (PixelPerByte > 1 && ByteCount % PixelPerByte != PixelThreshold)
@@ -144,7 +182,7 @@ namespace Waveshare.Devices.Epd7in5b_V2
                 Write(WhiteIndex);
             }
 
-            m_MemStream.Write(m_BlackLine, 0, m_BlackLine.Length);
+            m_Layer2MemoryStream.Write(m_BlackLine, 0, m_BlackLine.Length);
             base.WriteBlankLine();
         }
 

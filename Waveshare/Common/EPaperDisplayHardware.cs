@@ -29,7 +29,7 @@ using System;
 using System.Device.Gpio;
 using System.Device.Spi;
 using System.IO;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 

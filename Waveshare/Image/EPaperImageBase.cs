@@ -27,6 +27,7 @@
 
 using System;
 using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 

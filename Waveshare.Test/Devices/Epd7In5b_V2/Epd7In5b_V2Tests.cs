@@ -13,7 +13,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Image.Bitmap;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 

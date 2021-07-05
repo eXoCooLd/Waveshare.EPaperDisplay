@@ -30,7 +30,7 @@ using NUnit.Framework;
 using System;
 using System.Device.Gpio;
 using Waveshare.Devices;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 

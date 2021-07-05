@@ -35,7 +35,7 @@ using System.IO;
 using System.Linq;
 using Waveshare.Devices.Epd7in5bc;
 using Waveshare.Image.Bitmap;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 

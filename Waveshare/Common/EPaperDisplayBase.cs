@@ -31,7 +31,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -57,6 +57,11 @@ namespace Waveshare.Common
         //########################################################################################
 
         #region Fields
+
+        /// <summary>
+        /// Buffered Display Writer
+        /// </summary>
+        private IEPaperDisplayWriter m_DisplayWriter;
 
         /// <summary>
         /// Has class been disposed
@@ -102,7 +107,7 @@ namespace Waveshare.Common
         /// <summary>
         /// Display Writer assigned to the device
         /// </summary>
-        public abstract EPaperDisplayWriter DisplayWriter { get; }
+        protected IEPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
 
         /// <summary>
         /// Pixels per Byte on the Device
@@ -162,7 +167,7 @@ namespace Waveshare.Common
 
             if (disposing)
             {
-                DisplayWriter?.Dispose();
+                m_DisplayWriter?.Dispose();
                 DeviceShutdown();
             }
 
@@ -508,6 +513,15 @@ namespace Waveshare.Common
         /// <param name="rgb">color byte</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         protected abstract byte ColorToByte(ByteColor rgb);
+
+        /// <summary>
+        /// Generate a display writer for this device
+        /// </summary>
+        /// <returns>Returns a display writer</returns>
+        protected virtual IEPaperDisplayWriter GetDisplayWriter()
+        {
+            return new EPaperDisplayWriter(this);
+        }
 
         #endregion Protected Methods
 
