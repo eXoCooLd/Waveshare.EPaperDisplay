@@ -33,7 +33,6 @@ public static void Main()
 	ePaperDisplay.Clear();
 	ePaperDisplay.WaitUntilReady();
 	ePaperDisplay.DisplayImage(bitmap);
-	ePaperDisplay.Sleep();
 }
 ```
 
