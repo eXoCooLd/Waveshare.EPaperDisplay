@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,69 +29,32 @@ using System;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// Bufferd display writer
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal interface IEPaperDisplayWriter : IDisposable
     {
         /// <summary>
-        /// Pixel Width of the Display
+        /// Send the Data to the Hardware
         /// </summary>
-        int Width { get; }
+        void Finish();
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Write to the Buffer
         /// </summary>
-        int Height { get; }
+        /// <param name="index"></param>
+        void Write(int index);
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Write a Blank Line in the Buffer
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        void WriteBlankLine();
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Write a Blank Pixel
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
-
-        /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOn();
-
-        /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOff();
-
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
+        void WriteBlankPixel();
     }
 }

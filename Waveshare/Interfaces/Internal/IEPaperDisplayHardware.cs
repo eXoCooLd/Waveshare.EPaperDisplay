@@ -26,72 +26,54 @@
 #region Usings
 
 using System;
+using System.Device.Gpio;
+using System.IO;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// E-Paper Hardware Interface for GPIO and SPI Bus
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal interface IEPaperDisplayHardware : IDisposable
     {
         /// <summary>
-        /// Pixel Width of the Display
+        /// GPIO Reset Pin
         /// </summary>
-        int Width { get; }
+        PinValue ResetPin { get; set; }
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// GPIO SPI DC Pin
         /// </summary>
-        int Height { get; }
+        PinValue SpiDcPin { get; set; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// GPIO SPI CS Pin
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        PinValue SpiCsPin { get; set; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// GPIO Busy Pin
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
+        PinValue BusyPin { get; set; }
 
         /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
+        /// Write data to the SPI device
         /// </summary>
-        void PowerOn();
+        /// <param name="stream">The stream that contains the data to be written to the SPI device</param>
+        void Write(MemoryStream stream);
 
         /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
+        /// Write data to the SPI device
         /// </summary>
-        void PowerOff();
+        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
+        void Write(byte[] buffer);
 
         /// <summary>
-        /// Send the Display into SleepMode
+        /// Write a byte to the SPI device
         /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
+        /// <param name="value">The byte to be written to the SPI device</param>
+        void WriteByte(byte value);
     }
 }

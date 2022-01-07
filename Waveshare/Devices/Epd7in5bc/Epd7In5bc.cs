@@ -25,10 +25,6 @@
 
 #region Usings
 
-using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Waveshare.Common;
 
@@ -51,7 +47,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Pixels per Byte on the Device
         /// </summary>
-        protected override int PixelPerByte { get; } = 2;
+        public override int PixelPerByte { get; } = 2;
 
         /// <summary>
         /// Pixel Width of the Display
@@ -62,6 +58,16 @@ namespace Waveshare.Devices.Epd7in5bc
         /// Pixel Height of the Display
         /// </summary>
         public override int Height { get; } = 384;
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public override ByteColor[] SupportedByteColors { get; } = {ByteColors.Black, ByteColors.Gray, ByteColors.White, ByteColors.Red };
+
+        /// <summary>
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
+        /// </summary>
+        public override byte[] DeviceByteColors { get; } = { Epd7in5bcColors.Black, Epd7in5bcColors.Gray, Epd7in5bcColors.White, Epd7in5bcColors.Red };
 
         /// <summary>
         /// Get Status Command
@@ -89,7 +95,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void Clear()
         {
-            FillColor(Color.White);
+            FillColor(ByteColors.White);
             TurnOnDisplay();
         }
 
@@ -98,7 +104,7 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         public override void ClearBlack()
         {
-            FillColor(Color.Black);
+            FillColor(ByteColors.Black);
             TurnOnDisplay();
         }
 
@@ -196,20 +202,18 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
+        /// <param name="rgb">color bytes</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        protected override byte ColorToByte(byte r, byte g, byte b)
+        protected override byte ColorToByte(ByteColor rgb)
         {
-            if (IsMonochrom(r, g, b))
+            if (rgb.IsMonochrome)
             {
-                if (r <= 85)
+                if (rgb.R <= 85)
                 {
                     return Epd7in5bcColors.Black;
                 }
 
-                if (r <= 170)
+                if (rgb.R <= 170)
                 {
                     return Epd7in5bcColors.Gray;
                 }
@@ -217,60 +221,10 @@ namespace Waveshare.Devices.Epd7in5bc
                 return Epd7in5bcColors.White;
             }
 
-            return r >= 64 ? Epd7in5bcColors.Red : Epd7in5bcColors.Black;
+            return rgb.R >= 64 ? Epd7in5bcColors.Red : Epd7in5bcColors.Black;
         }
 
         #endregion Protected Methods
-
-        //########################################################################################
-
-        #region Internal Methods
-
-        /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="image">Bitmap image to convert</param>
-        internal override void SendBitmapToDevice(Bitmap image)
-        {
-            var maxX = Math.Min(Width, image.Width);
-            var maxY = Math.Min(Height, image.Height);
-
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            var bytesPerPixelInImage = inputData.Stride / image.Width;
-            var deviceLineWithInByte = Width * bytesPerPixelInImage;
-            var deviceStep = bytesPerPixelInImage * PixelPerByte;
-
-            try
-            {
-                var scanLine = inputData.Scan0;
-                var line = new byte[inputData.Stride];
-                
-                for (var y = 0; y < Height; y++)
-                {
-                    var outputLine = CloneWhiteScanLine();
-
-                    if (y < maxY)
-                    {
-                        Marshal.Copy(scanLine, line, 0, line.Length);
-
-                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
-                        {
-                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                        }
-
-                        scanLine += inputData.Stride;
-                    }
-
-                    SendData(outputLine);
-                }
-            }
-            finally
-            {
-                image.UnlockBits(inputData);
-            }
-        }
-
-        #endregion Internal Methods
 
         //########################################################################################
 
@@ -288,10 +242,10 @@ namespace Waveshare.Devices.Epd7in5bc
         /// <summary>
         /// Fill the screen with a color
         /// </summary>
-        /// <param name="color">Color to fill the screen</param>
-        private void FillColor(Color color)
+        /// <param name="rgb">Color to fill the screen</param>
+        private void FillColor(ByteColor rgb)
         {
-            var outputLine = GetColoredLineOnDevice(color);
+            var outputLine = GetColoredLineOnDevice(rgb);
 
             SendCommand(StartDataTransmissionCommand);
 

@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,75 +23,31 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-#region Usings
-
-using System;
-
-#endregion Usings
-
-namespace Waveshare.Interfaces
+namespace Waveshare.Common
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// Colors as ByteArrays
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal class ByteColors
     {
         /// <summary>
-        /// Pixel Width of the Display
+        /// Color White as ByteColor
         /// </summary>
-        int Width { get; }
+        public static readonly ByteColor White = new ByteColor(255, 255, 255);
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Color Gray as ByteColor
         /// </summary>
-        int Height { get; }
+        public static readonly ByteColor Gray = new ByteColor(128, 128, 128);
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Color Black as ByteColor
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        public static readonly ByteColor Black = new ByteColor(0, 0, 0);
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Color Red as ByteColor
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
-
-        /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOn();
-
-        /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOff();
-
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
+        public static readonly ByteColor Red = new ByteColor(255, 0, 0);
     }
 }

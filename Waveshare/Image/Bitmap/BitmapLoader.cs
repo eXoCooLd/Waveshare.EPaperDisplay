@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,72 +26,53 @@
 #region Usings
 
 using System;
+using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Image.Bitmap
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// System.Drawing.Bitmap Image Loader
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
     {
-        /// <summary>
-        /// Pixel Width of the Display
-        /// </summary>
-        int Width { get; }
+
+        //########################################################################################
+
+        #region Constructor / Dispose / Finalizer
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Constructor
         /// </summary>
-        int Height { get; }
+        /// <param name="ePaperDisplay"></param>
+        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
+        {
+        }
+
+        #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
+        #region Protected Methods
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Load the System.Drawing.Bitmap into a RawImage
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
+        {
+            var maxWidth = Math.Min(Width, image.Width);
+            var maxHeight = Math.Min(Height, image.Height);
 
-        /// <summary>
-        /// Wait until the display is ready
-        /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
+            return new BitmapRawImage(image, maxWidth, maxHeight);
+        }
 
-        /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOn();
+        #endregion Protected Methods
 
-        /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
-        /// </summary>
-        void PowerOff();
+        //########################################################################################
 
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        void Sleep();
-
-        /// <summary>
-        /// WakeUp the Display from SleepMode
-        /// </summary>
-        void WakeUp();
-
-        /// <summary>
-        /// Clear the Display to White
-        /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
     }
 }

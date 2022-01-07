@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,47 +24,37 @@
 #endregion Copyright
 
 #region Usings
-using System;
-using System.Device.Gpio;
+
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Devices.Epd7in5b_V2
 {
     /// <summary>
-    /// E-Paper Hardware Interface for GPIO and SPI Bus
+    /// Byte values for the supported hardware colors
     /// </summary>
-    internal interface IEPaperDisplayHardware : IDisposable
+    // ReSharper disable once InconsistentNaming
+    internal class Epd7In5b_V2Colors
     {
-        /// <summary>
-        /// GPIO Reset Pin
-        /// </summary>
-        PinValue ResetPin { get; set; }
 
         /// <summary>
-        /// GPIO SPI DC Pin
+        /// Byte value for color black
         /// </summary>
-        PinValue SpiDcPin { get; set; }
+        public const byte Black = 0x00;
 
         /// <summary>
-        /// GPIO SPI CS Pin
+        /// Byte value for color white
         /// </summary>
-        PinValue SpiCsPin { get; set; }
+        public const byte White = 0x01;
 
         /// <summary>
-        /// GPIO Busy Pin
+        /// Byte value for color red
         /// </summary>
-        PinValue BusyPin { get; set; }
+        public const byte Red = 0x01;
 
         /// <summary>
-        /// Write data to the SPI device
+        /// Byte value for color not red
         /// </summary>
-        /// <param name="buffer">The buffer that contains the data to be written to the SPI device</param>
-        void Write(byte[] buffer);
+        public const byte NotRed = 0x00;
 
-        /// <summary>
-        /// Write a byte to the SPI device
-        /// </summary>
-        /// <param name="value">The byte to be written to the SPI device</param>
-        void WriteByte(byte value);
     }
 }

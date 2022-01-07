@@ -26,12 +26,12 @@
 #region Usings
 
 using System;
-using System.Collections.ObjectModel;
 using System.Device.Gpio;
 using System.Diagnostics;
-using System.Drawing;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
-using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -52,63 +52,27 @@ namespace Waveshare.Common
         /// </summary>
         private const int WaitUntilReadyTimeout = 50000;
 
-        /// <summary>
-        /// Color Bytes per Pixel (R, G, B)
-        /// </summary>
-        protected const int ColorBytesPerPixel = 3;
-
         #endregion Constants
-        
+
         //########################################################################################
 
         #region Fields
 
         /// <summary>
-        /// A white scan line on the device
+        /// Buffered Display Writer
         /// </summary>
-        private ReadOnlyCollection<byte> m_WhiteLineOnDevice;
+        private IEPaperDisplayWriter m_DisplayWriter;
 
         /// <summary>
-        /// Byte value for a block (PixelPerByte) of white pixels on the Device
+        /// Has class been disposed
         /// </summary>
-        private byte? m_WhitePixelBlockOnDevice;
+        private bool m_Disposed;
 
         #endregion Fields
 
         //########################################################################################
 
         #region Properties
-
-        /// <summary>
-        /// Default white scan line on the device
-        /// </summary>
-        private ReadOnlyCollection<byte> WhiteLineOnDevice => m_WhiteLineOnDevice ?? (m_WhiteLineOnDevice = GetWhiteLineOnDevice());
-
-        /// <summary>
-        /// Byte value for a block (PixelPerByte) of white pixels on the Device
-        /// </summary>
-        protected byte WhitePixelBlockOnDevice
-        {
-            get
-            {
-                if (!m_WhitePixelBlockOnDevice.HasValue)
-                {
-                    m_WhitePixelBlockOnDevice = GetMergedPixelDataInByte(Color.White);
-                }
-
-                return m_WhitePixelBlockOnDevice.Value;
-            }
-        }
-
-        /// <summary>
-        /// Pixels per Byte on the Device
-        /// </summary>
-        protected abstract int PixelPerByte { get; }
-
-        /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
-        /// </summary>
-        public IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
 
         /// <summary>
         /// Pixel Width of the Display
@@ -119,6 +83,41 @@ namespace Waveshare.Common
         /// Pixel Height of the Display
         /// </summary>
         public abstract int Height { get; }
+
+        /// <summary>
+        /// Supported Colors of the E-Paper Device
+        /// </summary>
+        public abstract ByteColor[] SupportedByteColors { get; }
+
+        /// <summary>
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
+        /// </summary>
+        public abstract byte[] DeviceByteColors { get; }
+
+        /// <summary>
+        /// Color Bytes per Pixel (R, G, B)
+        /// </summary>
+        public int ColorBytesPerPixel { get; set; } = 3;
+
+        /// <summary>
+        /// Color Bytes per Pixel (R, G, B)
+        /// </summary>
+        public bool IsPalletMonochrome { get; private set; }
+
+        /// <summary>
+        /// Display Writer assigned to the device
+        /// </summary>
+        protected IEPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
+
+        /// <summary>
+        /// Pixels per Byte on the Device
+        /// </summary>
+        public abstract int PixelPerByte { get; }
+
+        /// <summary>
+        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// </summary>
+        public IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
 
         /// <summary>
         /// Get Status Command
@@ -144,31 +143,35 @@ namespace Waveshare.Common
         /// <summary>
         /// Finalizer
         /// </summary>
-        ~EPaperDisplayBase()
-        {
-            Dispose(false);
-
-            DeviceShutdown();
-        }
+        ~EPaperDisplayBase() => Dispose(false);
 
         /// <summary>
-        /// Dispose
+        /// Dispose of class
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
-
-            DeviceShutdown();
-
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Dispose for sub classes
+        /// Dispose of instantiated objects
         /// </summary>
-        /// <param name="disposing"></param>
+        /// <param name="disposing">Explicit dispose</param>
         protected virtual void Dispose(bool disposing)
         {
+            if (m_Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                m_DisplayWriter?.Dispose();
+                DeviceShutdown();
+            }
+
+            m_Disposed = true;
         }
 
         #endregion Constructor / Dispose / Finalizer
@@ -224,6 +227,32 @@ namespace Waveshare.Common
         }
 
         /// <summary>
+        /// Display a Image on the Display
+        /// </summary>
+        /// <param name="rawImage">Bitmap that should be displayed</param>
+        /// <param name="dithering"></param>
+        public void DisplayImage(IRawImage rawImage, bool dithering)
+        {
+            SendCommand(StartDataTransmissionCommand);
+
+            if (dithering)
+            {
+                SendDitheredBitmapToDevice(rawImage.ScanLine, rawImage.Stride, rawImage.Width, rawImage.Height);
+            }
+            else
+            {
+                SendBitmapToDevice(rawImage.ScanLine, rawImage.Stride, rawImage.Width, rawImage.Height);
+            }
+
+            if (StopDataTransmissionCommand < byte.MaxValue)
+            {
+                SendCommand(StopDataTransmissionCommand);
+            }
+
+            TurnOnDisplay();
+        }
+
+        /// <summary>
         /// Initialize the Display with the Hardware Interface
         /// </summary>
         /// <param name="ePaperDisplayHardware"></param>
@@ -232,6 +261,16 @@ namespace Waveshare.Common
             EPaperDisplayHardware = ePaperDisplayHardware;
 
             DeviceInitialize();
+
+            IsPalletMonochrome = true;
+            foreach (var color in SupportedByteColors)
+            {
+                if (!color.IsMonochrome)
+                {
+                    IsPalletMonochrome = false;
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -268,29 +307,10 @@ namespace Waveshare.Common
         }
 
         /// <summary>
-        /// Display a Image on the Display
-        /// </summary>
-        /// <param name="image">Bitmap that should be displayed</param>
-        public virtual void DisplayImage(Bitmap image)
-        {
-            SendCommand(StartDataTransmissionCommand);
-            SendBitmapToDevice(image);
-            SendCommand(StopDataTransmissionCommand);
-
-            TurnOnDisplay();
-        }
-
-        #endregion Public Methods
-
-        //########################################################################################
-
-        #region Protected Methods
-
-        /// <summary>
         /// Send a Command to the Display
         /// </summary>
         /// <param name="command"></param>
-        protected void SendCommand(byte command)
+        public void SendCommand(byte command)
         {
             EPaperDisplayHardware.SpiDcPin = PinValue.Low;
             EPaperDisplayHardware.SpiCsPin = PinValue.Low;
@@ -302,7 +322,7 @@ namespace Waveshare.Common
         /// Send one Data Byte to the Display
         /// </summary>
         /// <param name="data"></param>
-        protected void SendData(byte data)
+        public void SendData(byte data)
         {
             EPaperDisplayHardware.SpiDcPin = PinValue.High;
             EPaperDisplayHardware.SpiCsPin = PinValue.Low;
@@ -314,7 +334,7 @@ namespace Waveshare.Common
         /// Send a Data Array to the Display
         /// </summary>
         /// <param name="data"></param>
-        protected void SendData(byte[] data)
+        public void SendData(byte[] data)
         {
             EPaperDisplayHardware.SpiDcPin = PinValue.High;
             EPaperDisplayHardware.SpiCsPin = PinValue.Low;
@@ -323,37 +343,25 @@ namespace Waveshare.Common
         }
 
         /// <summary>
-        /// Check if a Pixel is Monochrom (white, gray or black)
+        /// Send a stream to the Display
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
-        /// <returns></returns>
-        protected static bool IsMonochrom(byte r, byte g, byte b)
+        /// <param name="stream"></param>
+        public void SendData(MemoryStream stream)
         {
-            return r == g && g == b;
-        }
-
-        /// <summary>
-        /// Check if a Pixel is Red
-        /// </summary>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        protected static bool IsRed(byte r, byte g, byte b)
-        {
-            return r > (g + 20) && r > (b + 20);
+            EPaperDisplayHardware.SpiDcPin = PinValue.High;
+            EPaperDisplayHardware.SpiCsPin = PinValue.Low;
+            EPaperDisplayHardware.Write(stream);
+            EPaperDisplayHardware.SpiCsPin = PinValue.High;
         }
 
         /// <summary>
         /// Get a colored scan line on the device
         /// </summary>
-        /// <param name="color"></param>
+        /// <param name="rgb"></param>
         /// <returns></returns>
-        protected byte[] GetColoredLineOnDevice(Color color)
+        public byte[] GetColoredLineOnDevice(ByteColor rgb)
         {
-            var devicePixel = GetMergedPixelDataInByte(color);
+            var devicePixel = GetMergedPixelDataInByte(rgb);
 
             var outputWidth = Width / PixelPerByte;
             var outputLine = new byte[outputWidth];
@@ -367,54 +375,126 @@ namespace Waveshare.Common
         }
 
         /// <summary>
-        /// Clone the default white scan line into a new byte array
+        /// Gets the index for the supported color closest to a color
         /// </summary>
-        /// <returns></returns>
-        protected byte[] CloneWhiteScanLine()
+        /// <param name="color">Color to look up</param>
+        /// <returns>Color index of closest supported color</returns>
+        public int GetColorIndex(ByteColor color)
         {
-            var scanLine = new byte[WhiteLineOnDevice.Count];
-            WhiteLineOnDevice.CopyTo(scanLine, 0);
-            return scanLine;
+            var minDistance = GetColorDistance(color, SupportedByteColors[0]);
+            if (minDistance < 1)
+            {
+                return 0;
+            }
+
+            var bestIndex = 0;
+
+            for (var i = 1; i < SupportedByteColors.Length; i++)
+            {
+                var distance = GetColorDistance(color, SupportedByteColors[i]);
+                if (distance <= minDistance)
+                {
+                    minDistance = distance;
+                    bestIndex = i;
+                    if (minDistance < 1)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return bestIndex;
+        }
+
+        #endregion Public Methods
+
+        //########################################################################################
+
+        #region Protected Methods
+
+        /// <summary>
+        /// Gets the Euclidean distance between two colors
+        /// </summary>
+        /// <param name="color1">First color to compare</param>
+        /// <param name="color2">Second color to compare</param>
+        /// <returns>Returns the distance between two colors</returns>
+        protected double GetColorDistance(ByteColor color1, ByteColor color2)
+        {
+            if (IsPalletMonochrome)
+            {
+                return (color1.R - color2.R) * (color1.R - color2.R);
+            }
+
+            var (y1, u1, v1) = GetYuv(color1);
+            var (y2, u2, v2) = GetYuv(color2);
+            var diffY = y1 - y2;
+            var diffU = u1 - u2;
+            var diffV = v1 - v2;
+
+            return diffY * diffY + diffU * diffU + diffV * diffV;
         }
 
         /// <summary>
-        /// Get Pixel from the byte array
+        /// Adjust RGB values on a color. Clamping the values between 0 and 255.
         /// </summary>
-        /// <param name="line"></param>
-        /// <param name="xPosition"></param>
-        /// <param name="pixel"></param>
-        /// <returns></returns>
-        protected byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
+        /// <param name="color">Color to adjust</param>
+        /// <param name="valueR">Red value to add</param>
+        /// <param name="valueG">Green value to add</param>
+        /// <param name="valueB">Blue value to add</param>
+        protected static void AdjustRgb(ref ByteColor color, int valueR, int valueG, int valueB)
         {
-            var pixelWith = ColorBytesPerPixel * pixel;
+            var r = ConvertColorIntToByte(color.R + valueR);
+            var g = ConvertColorIntToByte(color.G + valueG);
+            var b = ConvertColorIntToByte(color.B + valueB);
 
-            var colorR = xPosition + pixelWith + 2;
-            var colorG = xPosition + pixelWith + 1;
-            var colorB = xPosition + pixelWith + 0;
-
-            if (colorR >= line.Length)
-            {
-                return WhitePixelBlockOnDevice;
-            }
-
-            return ColorToByte(line[colorR], line[colorG], line[colorB]);
+            color.SetBGR(b, g, r);
         }
 
         /// <summary>
-        /// Get the two pixel from the array and merge them into a device pixel
+        /// Floyd-Steinberg Dithering
         /// </summary>
-        /// <param name="xPosition"></param>
-        /// <param name="line"></param>
-        /// <returns></returns>
-        protected byte GetDevicePixels(int xPosition, byte[] line)
+        /// <param name="data"></param>
+        /// <param name="previousLine"></param>
+        /// <param name="currentLine"></param>
+        /// <param name="isLastLine"></param>
+        protected void DitherAndWrite(ByteColor[,] data, int previousLine, int currentLine, bool isLastLine)
         {
-            var pixels = new byte[PixelPerByte];
-            for (var i = 0; i < pixels.Length; i++)
+            for (var x = 0; x < Width; x++)
             {
-                pixels[i] = GetPixelFromArray(line, xPosition, i);
-            }
+                var currentPixel = data[x, previousLine];
+                var colorNdx = GetColorIndex(currentPixel);
+                var bestColor = SupportedByteColors[colorNdx];
 
-            return MergePixelDataInByte(pixels);
+                var errorR = currentPixel.R - bestColor.R;
+                var errorG = currentPixel.G - bestColor.G;
+                var errorB = currentPixel.B - bestColor.B;
+
+                // Add 7/16 of the color difference to the pixel on the right
+                if (x < Width - 1)
+                {
+                    AdjustRgb(ref data[x + 1, previousLine], errorR * 7 / 16, errorG * 7 / 16, errorB * 7 / 16);
+                }
+
+                if (!isLastLine)
+                {
+                    // Add 3/16 of the color difference to the pixel below and to the left
+                    if (x > 0)
+                    {
+                        AdjustRgb(ref data[x - 1, currentLine], errorR * 3 / 16, errorG * 3 / 16, errorB * 3 / 16);
+                    }
+
+                    // Add 5/16 of the color difference to the pixel directly below
+                    AdjustRgb(ref data[x, currentLine], errorR * 5 / 16, errorG * 5 / 16, errorB * 5 / 16);
+
+                    // Add 1/16 of the color difference to the pixel below and to the right
+                    if (x < Width - 1)
+                    {
+                        AdjustRgb(ref data[x + 1, currentLine], errorR / 16, errorG / 16, errorB / 16);
+                    }
+                }
+
+                DisplayWriter.Write(colorNdx);
+            }
         }
 
         /// <summary>
@@ -430,23 +510,24 @@ namespace Waveshare.Common
         /// <summary>
         /// Convert a pixel to a DataByte
         /// </summary>
-        /// <param name="r">Red color byte</param>
-        /// <param name="g">Green color byte</param>
-        /// <param name="b">Blue color byte</param>
+        /// <param name="rgb">color byte</param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        protected abstract byte ColorToByte(byte r, byte g, byte b);
+        protected abstract byte ColorToByte(ByteColor rgb);
+
+        /// <summary>
+        /// Generate a display writer for this device
+        /// </summary>
+        /// <returns>Returns a display writer</returns>
+        protected virtual IEPaperDisplayWriter GetDisplayWriter()
+        {
+            return new EPaperDisplayWriter(this);
+        }
 
         #endregion Protected Methods
 
         //########################################################################################
 
         #region Internal Methods
-
-        /// <summary>
-        /// Send a Bitmap as Byte Array to the Device
-        /// </summary>
-        /// <param name="image">Bitmap to convert</param>
-        internal abstract void SendBitmapToDevice(Bitmap image);
 
         /// <summary>
         /// Merge pixels into a Device Byte
@@ -465,18 +546,130 @@ namespace Waveshare.Common
                 throw new ArgumentException($"Argument {nameof(pixel)}.Length is not PixelPerByte {PixelPerByte}", nameof(pixel));
             }
 
+            const int bitStates = 2;
             const int bitsInByte = 8;
+
             var bitMoveLength = bitsInByte / PixelPerByte;
+            var maxValue = (byte) Math.Pow(bitStates, bitMoveLength) - 1;
 
             byte output = 0;
 
             for (var i = 0; i < pixel.Length; i++)
             {
-                var moveFactor = bitsInByte - bitMoveLength * (i + 1);
-                output |= (byte)(pixel[i] << moveFactor);
+                var bitMoveValue = bitsInByte - bitMoveLength - (i * bitMoveLength); 
+
+                var value = (byte)(pixel[i] << bitMoveValue);
+                var mask = maxValue << bitMoveValue;
+                var posValue = (byte)(value & mask);
+
+                output |= posValue;
             }
 
             return output;
+        }
+
+        /// <summary>
+        /// Send a Bitmap as Byte Array to the Device
+        /// </summary>
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal void SendBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
+        {
+            var inputLine = new byte[stride];
+            var pixel = new ByteColor(0, 0, 0);
+
+            for (var y = 0; y < maxY; y++, scanLine += stride)
+            {
+                Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
+
+                var xPos = 0;
+                for (var x = 0; x < maxX; x++)
+                {
+                    pixel.SetBGR(inputLine[xPos++], inputLine[xPos++], inputLine[xPos++], IsPalletMonochrome);
+                    DisplayWriter.Write(GetColorIndex(pixel));
+                }
+
+                for (var x = maxX; x < Width; x++)
+                {
+                    DisplayWriter.WriteBlankPixel();
+                }
+            }
+
+            // Write blank lines if image is smaller than display.
+            for (var y = maxY; y < Height; y++)
+            {
+                DisplayWriter.WriteBlankLine();
+            }
+
+            DisplayWriter.Finish();
+        }
+
+        /// <summary>
+        /// Send a Dithered Bitmap as Byte Array to the Device
+        /// </summary>
+        /// <param name="scanLine">Int Pointer to the start of the Bytearray</param>
+        /// <param name="stride">Length of a ScanLine</param>
+        /// <param name="maxX">Max Pixels horizontal</param>
+        /// <param name="maxY">Max Pixels Vertical</param>
+        internal void SendDitheredBitmapToDevice(IntPtr scanLine, int stride, int maxX, int maxY)
+        {
+            var data = new ByteColor[Width, 2];
+            var currentLine = 0;
+            var previousLine = 1;
+
+            var inputLine = new byte[stride];
+            var pixel = new ByteColor(0, 0, 0);
+            var odd = false;
+            var dither = false;
+
+            for (var y = 0; y < maxY; y++, scanLine += stride)
+            {
+                if (odd)
+                {
+                    previousLine = 0;
+                    currentLine = 1;
+                    odd = false;
+                    dither = true;
+                }
+                else
+                {
+                    previousLine = 1;
+                    currentLine = 0;
+                    odd = true;
+                }
+
+                Marshal.Copy(scanLine, inputLine, 0, inputLine.Length);
+
+                var xPos = 0;
+                for (var x = 0; x < maxX; x++)
+                {
+                    pixel.SetBGR(inputLine[xPos++], inputLine[xPos++], inputLine[xPos++], IsPalletMonochrome);
+                    data[x, currentLine] = pixel;
+                }
+
+                for (var x = maxX; x < Width; x++)
+                {
+                    data[x, currentLine] = ByteColors.White;
+                }
+
+                if (dither)
+                {
+                    DitherAndWrite(data, previousLine, currentLine, false);
+                }
+            }
+
+            // Finish last line
+            DitherAndWrite(data, currentLine, previousLine, true);
+
+            // Write blank lines if image is smaller than display.
+            for (var y = maxY; y < Height; y++)
+            {
+                DisplayWriter.WriteBlankLine();
+            }
+
+            DisplayWriter.Finish();
         }
 
         #endregion Internal Methods
@@ -498,23 +691,15 @@ namespace Waveshare.Common
                 EPaperDisplayHardware = null;
             }
         }
-        /// <summary>
-        /// Return a white scan line for the device
-        /// </summary>
-        /// <returns></returns>
-        private ReadOnlyCollection<byte> GetWhiteLineOnDevice()
-        {
-            return new ReadOnlyCollection<byte>(GetColoredLineOnDevice(Color.White));
-        }
 
         /// <summary>
         /// Get a byte on the device with one Color for all pixels
         /// </summary>
-        /// <param name="color"></param>
+        /// <param name="rgb"></param>
         /// <returns></returns>
-        private byte GetMergedPixelDataInByte(Color color)
+        private byte GetMergedPixelDataInByte(ByteColor rgb)
         {
-            var pixelData = ColorToByte(color.R, color.G, color.B);
+            var pixelData = ColorToByte(rgb);
             var deviceBytesPerPixel = new byte[PixelPerByte];
 
             for (var i = 0; i < deviceBytesPerPixel.Length; i++)
@@ -525,8 +710,41 @@ namespace Waveshare.Common
             return MergePixelDataInByte(deviceBytesPerPixel);
         }
 
+        /// <summary>
+        /// Calculate YUV color space
+        /// </summary>
+        /// <param name="color"></param>
+        /// <returns></returns>
+        private static (double Y, double U, double V) GetYuv(ByteColor color)
+        {
+            return (color.R * .299000 + color.G * .587000 + color.B * .114000,
+                color.R * -.168736 + color.G * -.331264 + color.B * .500000 + 128,
+                color.R * .500000 + color.G * -.418688 + color.B * -.081312 + 128);
+        }
+
+        /// <summary>
+        /// Convert a Color Int to a Color Byte
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        private static byte ConvertColorIntToByte(int level)
+        {
+            if (level < byte.MinValue)
+            {
+                return byte.MinValue;
+            }
+            
+            if (level > byte.MaxValue)
+            {
+                return byte.MaxValue;
+            }
+
+            return (byte)level;
+        }
+
         #endregion Private Methods
 
         //########################################################################################
+
     }
 }

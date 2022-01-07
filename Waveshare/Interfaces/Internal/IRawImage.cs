@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,24 +23,42 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-namespace Waveshare.Interfaces
+#region Usings
+
+using System;
+
+#endregion Usings
+
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// Internal Interface to initialize with the Hardware Interface for GPIO and SPI Bus
+    /// Interface for the RAW Image that should be displayed
     /// </summary>
-    internal interface IEPaperDisplayInternal : IEPaperDisplay
+    internal interface IRawImage : IDisposable
     {
+        /// <summary>
+        /// Width of the Image or Device Width
+        /// </summary>
+        int Width { get; }
 
         /// <summary>
-        /// E-Paper Hardware Interface for GPIO and SPI Bus
+        /// Height of the Image or Device Height
         /// </summary>
-        IEPaperDisplayHardware EPaperDisplayHardware { get; set; }
+        int Height { get; }
 
         /// <summary>
-        /// Initialize the Display with the Hardware Interface
+        /// Length of a ScanLine in Bytes
         /// </summary>
-        /// <param name="ePaperDisplayHardware">Hardware Interface for GPIO and SPI Bus</param>
-        void Initialize(IEPaperDisplayHardware ePaperDisplayHardware);
+        int Stride { get; }
 
+        /// <summary>
+        /// Used Bytes per Pixel
+        /// </summary>
+        int BytesPerPixel { get; }
+
+        /// <summary>
+        /// IntPointer to the Byte Array of the Image
+        /// </summary>
+        IntPtr ScanLine { get; }
     }
 }

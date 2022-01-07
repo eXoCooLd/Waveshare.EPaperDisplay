@@ -31,9 +31,11 @@ using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using Waveshare.Devices.Epd7in5bc;
-using Waveshare.Interfaces;
+using Waveshare.Image.Bitmap;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -67,6 +69,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             m_EPaperDisplayHardwareMock.Setup(e => e.BusyPin).Returns(PinValue.High);
             m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<byte[]>())).Callback((byte[] b) => m_DataBuffer.AddRange(b));
             m_EPaperDisplayHardwareMock.Setup(e => e.WriteByte(It.IsAny<byte>())).Callback((byte b) => m_DataBuffer.Add(b));
+            m_EPaperDisplayHardwareMock.Setup(e => e.Write(It.IsAny<MemoryStream>())).Callback((MemoryStream b) => m_DataBuffer.AddRange(b.ToArray()));
         }
 
         #endregion Setup
@@ -262,7 +265,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             using var result = new Epd7In5Bc();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
-            var image = CreateSampleBitmap(result.Width, result.Height);
+            var image = CommonTestData.CreateSampleBitmap(result.Width, result.Height);
 
             var validBuffer = new List<byte>
             {
@@ -280,8 +283,10 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            result.DisplayImage(image);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -291,7 +296,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             using var result = new Epd7In5Bc();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
-            var image = CreateSampleBitmap(result.Width / 2, result.Height / 2);
+            var image = CommonTestData.CreateSampleBitmap(result.Width / 2, result.Height / 2);
 
             var validBuffer = new List<byte>
             {
@@ -309,8 +314,10 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            result.DisplayImage(image);
+            var bitmapEPaperDisplay = new BitmapLoader(result);
+            bitmapEPaperDisplay.DisplayImage(image);
 
+            Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
 
@@ -380,50 +387,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
         //########################################################################################
 
-        #region Helper
-
-        private static Bitmap CreateSampleBitmap(int width, int height)
-        {
-            var image = new Bitmap(width, height);
-
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var color = Color.White;
-
-                    if (x % 2 == 0)
-                    {
-                        color = Color.Black;
-                    }
-
-                    if (x % 3 == 0)
-                    {
-                        color = Color.Red;
-                    }
-
-                    if (x % 4 == 0)
-                    {
-                        color = Color.Gray;
-                    }
-
-                    if (x % 5 == 0)
-                    {
-                        color = Color.FromArgb(255, 50, 0, 0);
-                    }
-
-                    image.SetPixel(x, y, color);
-                }
-            }
-
-            return image;
-        }
-
-        #endregion Helper
-
-        //########################################################################################
-
         #region Old working Implementation
+
         /// <summary>
         /// Original Method: Merge two DataBytes into one Byte
         /// </summary>

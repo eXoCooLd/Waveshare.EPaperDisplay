@@ -52,19 +52,19 @@ namespace Waveshare.Example
         /// <param name="args">Commandline arguments</param>
         public static void Main(string[] args)
         {
-            using var bitmap = LoadBitmap(args);
+            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
+
+            using var bitmap = LoadBitmap(args, ePaperDisplay.Width, ePaperDisplay.Height);
             if (bitmap == null)
             {
                 return;
             }
 
-            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5b_V2);
-
             ePaperDisplay.Clear();
             ePaperDisplay.WaitUntilReady();
 
             Console.WriteLine("Sending Image to E-Paper Display...");
-            ePaperDisplay.DisplayImage(bitmap);
+            ePaperDisplay.DisplayImage(bitmap, true);
             Console.WriteLine("Done");
 
             ePaperDisplay.Sleep();
@@ -80,14 +80,16 @@ namespace Waveshare.Example
         /// Load Bitmap from arguments or get the default bitmap
         /// </summary>
         /// <param name="args"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         /// <returns></returns>
-        private static Bitmap LoadBitmap(string[] args)
+        private static Bitmap LoadBitmap(string[] args, int width, int height)
         {
             string bitmapFilePath;
 
             if (args == null || args.Length == 0)
             {
-                const string fileName = "like_a_sir_800x480.bmp";
+                var fileName = $"like_a_sir_{width}x{height}.bmp";
                 bitmapFilePath = Path.Combine(ExecutingAssemblyPath, fileName);
             }
             else

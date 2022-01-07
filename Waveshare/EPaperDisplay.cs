@@ -26,18 +26,17 @@
 #region Usings
 
 using System;
-using System.Runtime.CompilerServices;
 using Waveshare.Common;
 using Waveshare.Devices;
 using Waveshare.Devices.Epd7in5_V2;
 using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Devices.Epd7in5bc;
+using Waveshare.Image.Bitmap;
 using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-[assembly: InternalsVisibleTo("Waveshare.Test")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Waveshare
 {
     /// <summary>
@@ -66,7 +65,24 @@ namespace Waveshare
         /// </summary>
         /// <param name="displayType"></param>
         /// <returns></returns>
-        public static IEPaperDisplay Create(EPaperDisplayType displayType)
+        public static IEPaperDisplayBitmap Create(EPaperDisplayType displayType)
+        {
+            var ePaperDisplay = CreateEPaperDisplay(displayType);
+            return ePaperDisplay != null ? new BitmapLoader(ePaperDisplay) : null;
+        }
+
+        #endregion Public Methods
+
+        //########################################################################################
+
+        #region Private Methods
+
+        /// <summary>
+        /// Create a instance of a internal E-Paper Display
+        /// </summary>
+        /// <param name="displayType"></param>
+        /// <returns></returns>
+        private static IEPaperDisplayInternal CreateEPaperDisplay(EPaperDisplayType displayType)
         {
             IEPaperDisplayInternal display;
 
@@ -91,7 +107,7 @@ namespace Waveshare
             return display;
         }
 
-        #endregion Public Methods
+        #endregion Private Methods
 
         //########################################################################################
 

@@ -25,73 +25,71 @@
 
 #region Usings
 
-using System;
+using System.IO;
+using Waveshare.Common;
 
 #endregion Usings
 
-namespace Waveshare.Interfaces
+namespace Waveshare.Interfaces.Internal
 {
     /// <summary>
-    /// Interface for all E-Paper Devices
+    /// Internal Interface to initialize with the Hardware Interface for GPIO and SPI Bus
     /// </summary>
-    public interface IEPaperDisplay : IDisposable
+    internal interface IEPaperDisplayInternal : IEPaperDisplay
     {
         /// <summary>
-        /// Pixel Width of the Display
+        /// Color Bytes per Pixel (R, G, B)
         /// </summary>
-        int Width { get; }
+        int ColorBytesPerPixel { get; set; }
 
         /// <summary>
-        /// Pixel Height of the Display
+        /// Color Bytes of the E-Paper Device corresponding to the supported colors
         /// </summary>
-        int Height { get; }
+        byte[] DeviceByteColors { get; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Pixels per Byte on the Device
         /// </summary>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady();
+        int PixelPerByte { get; }
 
         /// <summary>
-        /// Wait until the display is ready
+        /// Initialize the Display with the Hardware Interface
         /// </summary>
-        /// <param name="timeout"></param>
-        /// <returns>true if device is ready, false for timeout</returns>
-        bool WaitUntilReady(int timeout);
+        /// <param name="ePaperDisplayHardware">Hardware Interface for GPIO and SPI Bus</param>
+        void Initialize(IEPaperDisplayHardware ePaperDisplayHardware);
 
         /// <summary>
-        /// Power the controller on.  Do not use with SleepMode.
+        /// Display a Image on the Display
         /// </summary>
-        void PowerOn();
+        /// <param name="rawImage">Bitmap that should be displayed</param>
+        /// <param name="dithering">Use Dithering to display the image</param>
+        void DisplayImage(IRawImage rawImage, bool dithering);
 
         /// <summary>
-        /// Power the controler off.  Do not use with SleepMode.
+        /// Gets the index for the supported color closest to a color
         /// </summary>
-        void PowerOff();
+        /// <param name="color">Color to look up</param>
+        /// <returns>Color index of closest supported color</returns>
+        int GetColorIndex(ByteColor color);
+
 
         /// <summary>
-        /// Send the Display into SleepMode
+        /// Get a colored scan line on the device
         /// </summary>
-        void Sleep();
+        /// <param name="rgb"></param>
+        /// <returns></returns>
+        byte[] GetColoredLineOnDevice(ByteColor rgb);
 
         /// <summary>
-        /// WakeUp the Display from SleepMode
+        /// Send a Command to the Display
         /// </summary>
-        void WakeUp();
+        /// <param name="command"></param>
+        void SendCommand(byte command);
 
         /// <summary>
-        /// Clear the Display to White
+        /// Send a stream to the Display
         /// </summary>
-        void Clear();
-
-        /// <summary>
-        /// Clear the Display to Black
-        /// </summary>
-        void ClearBlack();
-
-        /// <summary>
-        /// Reset the Display
-        /// </summary>
-        void Reset();
+        /// <param name="stream"></param>
+        void SendData(MemoryStream stream);
     }
 }

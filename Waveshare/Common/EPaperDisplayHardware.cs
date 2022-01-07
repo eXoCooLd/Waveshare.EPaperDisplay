@@ -25,9 +25,11 @@
 
 #region Usings
 
+using System;
 using System.Device.Gpio;
 using System.Device.Spi;
-using Waveshare.Interfaces;
+using System.IO;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
@@ -119,7 +121,7 @@ namespace Waveshare.Common
 
         //########################################################################################
 
-        #region Constructor / Dispose
+        #region Constructor / Dispose / Finalizer
 
         /// <summary>
         /// Default Constructor
@@ -156,24 +158,62 @@ namespace Waveshare.Common
         /// <summary>
         /// Dispose the SPI and GPIO Devices
         /// </summary>
-        public void Dispose()
+        private void Dispose(bool disposing)
         {
-            GpioController?.Write(GpioSpiCsPin, PinValue.Low);
-            GpioController?.Write(GpioSpiDcPin, PinValue.Low);
-            GpioController?.Write(GpioResetPin, PinValue.Low);
+            if (disposing)
+            {
+                GpioController?.Write(GpioSpiCsPin, PinValue.Low);
+                GpioController?.Write(GpioSpiDcPin, PinValue.Low);
+                GpioController?.Write(GpioResetPin, PinValue.Low);
 
-            GpioController?.Dispose();
-            GpioController = null;
+                GpioController?.Dispose();
+                GpioController = null;
 
-            SpiDevice?.Dispose();
-            SpiDevice = null;
+                SpiDevice?.Dispose();
+                SpiDevice = null;
+            }
         }
 
-        #endregion Constructor / Dispose
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Finalizer
+        /// </summary>
+        ~EPaperDisplayHardware() => Dispose(false);
+
+        #endregion Constructor / Dispose / Finalizer
 
         //########################################################################################
 
         #region Public Methods
+
+        /// <summary>
+        /// Write stream to the SPI device
+        /// </summary>
+        /// <param name="stream">The stream that contains the data to be written to the SPI device</param>
+        public void Write(MemoryStream stream)
+        {
+            byte[] buffer = new byte[Math.Min(4096, stream.Length)];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            while (bytesRead == buffer.Length)
+            {
+                SpiDevice?.Write(buffer);
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+            }
+
+            if (bytesRead > 0 && bytesRead < buffer.Length)
+            {
+                Array.Resize(ref buffer, bytesRead);
+                SpiDevice?.Write(buffer);
+            }
+        }
 
         /// <summary>
         /// Write data to the SPI device
@@ -198,6 +238,7 @@ namespace Waveshare.Common
         //########################################################################################
 
         #region Private Methods
+
         /// <summary>
         /// Create the GPIO Controller
         /// </summary>
