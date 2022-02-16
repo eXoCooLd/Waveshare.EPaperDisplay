@@ -105,6 +105,11 @@ namespace Waveshare.Common
         public bool IsPalletMonochrome { get; private set; }
 
         /// <summary>
+        /// State of the display sleep state
+        /// </summary>
+        protected bool DisplayIsSleeping { get; set; }
+
+        /// <summary>
         /// Display Writer assigned to the device
         /// </summary>
         protected IEPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
@@ -133,6 +138,11 @@ namespace Waveshare.Common
         /// Stop Data Transmission Command
         /// </summary>
         protected abstract byte StopDataTransmissionCommand { get; }
+
+        /// <summary>
+        /// Display DeepSleep Command
+        /// </summary>
+        protected abstract byte DeepSleepComand { get; }
 
         #endregion Properties
 
@@ -296,7 +306,16 @@ namespace Waveshare.Common
         /// <summary>
         /// Send the Display into SleepMode
         /// </summary>
-        public abstract void Sleep();
+        public virtual void Sleep()
+        {
+            if (!DisplayIsSleeping)
+            {
+                PowerOff();
+                SendCommand(DeepSleepComand);
+                SendData(0xA5);
+                DisplayIsSleeping = true;
+            }
+        }
 
         /// <summary>
         /// WakeUp the Display from SleepMode
@@ -304,6 +323,7 @@ namespace Waveshare.Common
         public void WakeUp()
         {
             DeviceInitialize();
+            DisplayIsSleeping = false;
         }
 
         /// <summary>
@@ -717,9 +737,9 @@ namespace Waveshare.Common
         /// <returns></returns>
         private static (double Y, double U, double V) GetYuv(ByteColor color)
         {
-            return (color.R * .299000 + color.G * .587000 + color.B * .114000,
-                color.R * -.168736 + color.G * -.331264 + color.B * .500000 + 128,
-                color.R * .500000 + color.G * -.418688 + color.B * -.081312 + 128);
+            return (color.R *  .299000 + color.G *  .587000 + color.B *  .114000,
+                    color.R * -.168736 + color.G * -.331264 + color.B *  .500000 + 128,
+                    color.R *  .500000 + color.G * -.418688 + color.B * -.081312 + 128);
         }
 
         /// <summary>

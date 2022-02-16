@@ -84,6 +84,11 @@ namespace Waveshare.Devices.Epd7in5bc
         /// </summary>
         protected override byte StopDataTransmissionCommand { get; } = (byte)Epd7In5BcCommands.DataStop;
 
+        /// <summary>
+        /// Display DeepSleep Command
+        /// </summary>
+        protected override byte DeepSleepComand { get; } = (byte)Epd7In5BcCommands.DeepSleep;
+
         #endregion Properties
 
         //########################################################################################
@@ -124,16 +129,6 @@ namespace Waveshare.Devices.Epd7in5bc
         {
             SendCommand(Epd7In5BcCommands.PowerOff);
             WaitUntilReady();
-        }
-
-        /// <summary>
-        /// Send the Display into SleepMode
-        /// </summary>
-        public override void Sleep()
-        {
-            PowerOff();
-            SendCommand(Epd7In5BcCommands.DeepSleep);
-            SendData(0xA5);
         }
 
         #endregion Public Methods

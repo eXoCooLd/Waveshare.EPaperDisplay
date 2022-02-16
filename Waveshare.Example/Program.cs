@@ -26,6 +26,7 @@
 #region Usings
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -52,7 +53,11 @@ namespace Waveshare.Example
         /// <param name="args">Commandline arguments</param>
         public static void Main(string[] args)
         {
-            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
+            Console.Write("Initializing E-Paper Display...");
+            var time = Stopwatch.StartNew();
+            using var ePaperDisplay = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5b_V2);
+            time.Stop();
+            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
 
             using var bitmap = LoadBitmap(args, ePaperDisplay.Width, ePaperDisplay.Height);
             if (bitmap == null)
@@ -60,14 +65,20 @@ namespace Waveshare.Example
                 return;
             }
 
+            Console.Write("Waiting for E-Paper Display...");
+            time = Stopwatch.StartNew();
             ePaperDisplay.Clear();
             ePaperDisplay.WaitUntilReady();
+            time.Stop();
+            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
 
-            Console.WriteLine("Sending Image to E-Paper Display...");
+            Console.Write("Sending Image to E-Paper Display...");
+            time = Stopwatch.StartNew();
             ePaperDisplay.DisplayImage(bitmap, true);
-            Console.WriteLine("Done");
+            time.Stop();
+            Console.WriteLine($" [Done {time.ElapsedMilliseconds} ms]");
 
-            ePaperDisplay.Sleep();
+            Console.WriteLine("Done");
         }
 
         #endregion Public Methods
