@@ -32,6 +32,7 @@ using Waveshare.Devices.Epd7in5_V2;
 using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Devices.Epd7in5bc;
 using Waveshare.Image.Bitmap;
+using Waveshare.Image.SkBitmap;
 using Waveshare.Interfaces;
 using Waveshare.Interfaces.Internal;
 
@@ -61,14 +62,25 @@ namespace Waveshare
         #region Public Methods
 
         /// <summary>
-        /// Create a instance of a E-Paper Display
+        /// Create a instance of a E-Paper Display for System.Drawing.Bitmap
         /// </summary>
         /// <param name="displayType"></param>
         /// <returns></returns>
-        public static IEPaperDisplayBitmap Create(EPaperDisplayType displayType)
+        public static IEPaperDisplayBitmap CreateBitmap(EPaperDisplayType displayType)
         {
             var ePaperDisplay = CreateEPaperDisplay(displayType);
             return ePaperDisplay != null ? new BitmapLoader(ePaperDisplay) : null;
+        }
+
+        /// <summary>
+        /// Create a instance of a E-Paper Display for SkiaSharp.SKBitmap
+        /// </summary>
+        /// <param name="displayType"></param>
+        /// <returns></returns>
+        public static IEPaperDisplaySKBitmap Create(EPaperDisplayType displayType)
+        {
+            var ePaperDisplay = CreateEPaperDisplay(displayType);
+            return ePaperDisplay != null ? new SKBitmapLoader(ePaperDisplay) : null;
         }
 
         #endregion Public Methods

@@ -27,14 +27,14 @@
 
 using Moq;
 using NUnit.Framework;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Waveshare.Devices.Epd7in5bc;
-using Waveshare.Image.Bitmap;
+using Waveshare.Image.SkBitmap;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
@@ -283,7 +283,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
@@ -314,7 +314,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
@@ -409,7 +409,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <returns></returns>
-        private static byte[] BitmapToData(Bitmap image, int width, int height)
+        private static byte[] BitmapToData(SKBitmap image, int width, int height)
         {
             const int pixelPerByte = 2;
 
@@ -440,9 +440,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        private static Color GetPixel(Bitmap image, int x, int y)
+        private static SKColor GetPixel(SKBitmap image, int x, int y)
         {
-            var color = Color.White;
+            var color = SKColors.White;
 
             if (x < image.Width && y < image.Height)
             {
@@ -457,7 +457,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         /// </summary>
         /// <param name="pixel"></param>
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
-        private static byte ColorToByte(Color pixel)
+        private static byte ColorToByte(SKColor pixel)
         {
             const byte black = 0x00;
             const byte gray = 0x02;
@@ -466,12 +466,12 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             if (IsMonochrom(pixel))
             {
-                if (pixel.R <= 85)
+                if (pixel.Red <= 85)
                 {
                     return black;
                 }
 
-                if (pixel.R <= 170)
+                if (pixel.Red <= 170)
                 {
                     return gray;
                 }
@@ -479,7 +479,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
                 return white;
             }
 
-            return pixel.R >= 64 ? red : black;
+            return pixel.Red >= 64 ? red : black;
         }
 
         /// <summary>
@@ -487,9 +487,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         /// </summary>
         /// <param name="pixel"></param>
         /// <returns></returns>
-        private static bool IsMonochrom(Color pixel)
+        private static bool IsMonochrom(SKColor pixel)
         {
-            return pixel.R == pixel.G && pixel.G == pixel.B;
+            return pixel.Red == pixel.Green && pixel.Green == pixel.Blue;
         }
 
         #endregion Old working Implementation

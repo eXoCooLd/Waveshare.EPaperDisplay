@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2022 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,70 +25,53 @@
 
 #region Usings
 
-using SkiaSharp;
-using System.Drawing;
-using System.Drawing.Imaging;
+using System;
+using Waveshare.Image.SKBitmap;
+using Waveshare.Interfaces;
+using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Test.Devices
+namespace Waveshare.Image.SkBitmap
 {
-    /// <summary>
-    /// Helper Class to generate TestData for the UnitTests
-    /// </summary>
-    internal class CommonTestData
+    internal class SKBitmapLoader : EPaperImageBase<SkiaSharp.SKBitmap>, IEPaperDisplaySKBitmap
     {
-
         //########################################################################################
 
-        #region Public Methods
+        #region Constructor / Dispose / Finalizer
 
         /// <summary>
-        /// Create a Sample Bitmap
+        /// Constructor
         /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <returns></returns>
-        public static SKBitmap CreateSampleBitmap(int width, int height)
+        /// <param name="ePaperDisplay"></param>
+        public SKBitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
         {
-            var image = new SKBitmap(new SKImageInfo(width, height));
-
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var color = SKColors.White;
-
-                    if (x % 2 == 0)
-                    {
-                        color = SKColors.Black;
-                    }
-
-                    if (x % 3 == 0)
-                    {
-                        color = SKColors.Red;
-                    }
-
-                    if (x % 4 == 0)
-                    {
-                        color = SKColors.Gray;
-                    }
-
-                    if (x % 5 == 0)
-                    {
-                        color = new SKColor(255, 50, 0, 0);
-                    }
-
-                    image.SetPixel(x, y, color);
-                }
-            }
-
-            return image;
         }
 
-        #endregion Public Methods
+        #endregion Constructor / Dispose / Finalizer
 
         //########################################################################################
 
+        #region Protected Methods
+
+        /// <summary>
+        /// Load the SSKBitmap into a RawImage
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected override IRawImage LoadImage(SkiaSharp.SKBitmap image)
+        {
+            var maxWith = Math.Min(Width, image.Width);
+            var maxHeight = Math.Min(Height, image.Height);
+
+            var subSet = new SkiaSharp.SKBitmap();
+            image.ExtractSubset(subSet, new SkiaSharp.SKRectI(0, 0, maxWith, maxHeight));
+
+            return new SKBitmapRawImage(image.Resize(new SkiaSharp.SKImageInfo(maxWith, maxHeight, SkiaSharp.SKColorType.Bgra8888), SkiaSharp.SKFilterQuality.High));
+        }
+
+        #endregion Protected Methods
+
+        //########################################################################################
     }
 }

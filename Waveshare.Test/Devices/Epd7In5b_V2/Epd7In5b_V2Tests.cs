@@ -2,6 +2,7 @@
 
 using Moq;
 using NUnit.Framework;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
@@ -13,6 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Image.Bitmap;
+using Waveshare.Image.SkBitmap;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
@@ -263,7 +265,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
@@ -302,7 +304,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             for (int i = 0; i < m_DataBuffer.Count; i++)
@@ -402,13 +404,13 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <param name="image"></param>
         /// <param name="imageBw"></param>
         /// <param name="imageRed"></param>
-        private static void SeparateColors(Bitmap image, out Bitmap imageBw, out Bitmap imageRed)
+        private static void SeparateColors(SKBitmap image, out SKBitmap imageBw, out SKBitmap imageRed)
         {
             int width = image.Width;
             int height = image.Height;
 
-            imageBw = new Bitmap(width, height, PixelFormat.Format24bppRgb);
-            imageRed = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+            imageBw = new SKBitmap(width, height);
+            imageRed = new SKBitmap(width, height);
 
             for (int y = 0; y < height; y++)
             {
@@ -416,15 +418,15 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
                 {
                     var pixel = image.GetPixel(x, y);
 
-                    if (IsRed(pixel.R, pixel.G, pixel.B))
+                    if (IsRed(pixel.Red, pixel.Green, pixel.Blue))
                     {
-                        imageRed.SetPixel(x, y, Color.Red);
-                        imageBw.SetPixel(x, y, Color.Black);
+                        imageRed.SetPixel(x, y, SKColors.Red);
+                        imageBw.SetPixel(x, y, SKColors.Black);
                     }
                     else
                     {
                         imageBw.SetPixel(x, y, pixel);
-                        imageRed.SetPixel(x, y, Color.Black);
+                        imageRed.SetPixel(x, y, SKColors.Black);
                     }
                 }
             }
@@ -467,7 +469,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <param name="width"></param>
         /// <param name="height"></param>
         /// <param name="defaultColor"></param>
-        internal static byte[] SendBitmapToDevice(Bitmap image, int width, int height, byte defaultColor)
+        internal static byte[] SendBitmapToDevice(SKBitmap image, int width, int height, byte defaultColor)
         {
             var outputArray = new List<byte>();
 
@@ -475,38 +477,31 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
             int maxX = Math.Min(width, image.Width);
             int maxY = Math.Min(height, image.Height);
 
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            try
+            var colorBytesPerPixel = image.BytesPerPixel;
+            var stride = maxX * image.BytesPerPixel;
+            var deviceLineWithInByte = image.Width * colorBytesPerPixel;
+            var deviceStep = colorBytesPerPixel * pixelPerByte;
+
+            IntPtr scanLine = image.GetPixels();
+            byte[] line = new byte[stride];
+
+            for (var y = 0; y < height; y++)
             {
-                var colorBytesPerPixel = inputData.Stride / inputData.Width;
-                var deviceLineWithInByte = inputData.Width * colorBytesPerPixel;
-                var deviceStep = colorBytesPerPixel * pixelPerByte;
+                var outputLine = CloneWhiteScanLine(width / pixelPerByte, defaultColor);
 
-                IntPtr scanLine = inputData.Scan0;
-                byte[] line = new byte[inputData.Stride];
-
-                for (var y = 0; y < height; y++)
+                if (y < maxY)
                 {
-                    var outputLine = CloneWhiteScanLine(width / pixelPerByte, defaultColor);
+                    Marshal.Copy(scanLine, line, 0, line.Length);
 
-                    if (y < maxY)
+                    for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                     {
-                        Marshal.Copy(scanLine, line, 0, line.Length);
-
-                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
-                        {
-                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                        }
-
-                        scanLine += inputData.Stride;
+                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
                     }
 
-                    outputArray.AddRange(outputLine);
+                    scanLine += stride;
                 }
-            }
-            finally
-            {
-                image.UnlockBits(inputData);
+
+                outputArray.AddRange(outputLine);
             }
 
             return outputArray.ToArray();
@@ -555,7 +550,7 @@ namespace Waveshare.Test.Devices.Epd7in5b_V2
         /// <returns></returns>
         private static byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
         {
-            var pixelWidth = 3 * pixel;
+            var pixelWidth = 4 * pixel;
 
             var colorB = xPosition + pixelWidth;
             var colorG = xPosition + ++pixelWidth;

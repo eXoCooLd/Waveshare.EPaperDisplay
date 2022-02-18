@@ -112,7 +112,7 @@ namespace Waveshare.Common
         /// <summary>
         /// Display Writer assigned to the device
         /// </summary>
-        protected IEPaperDisplayWriter DisplayWriter => m_DisplayWriter ?? (m_DisplayWriter = GetDisplayWriter());
+        protected IEPaperDisplayWriter DisplayWriter => m_DisplayWriter ??= GetDisplayWriter();
 
         /// <summary>
         /// Pixels per Byte on the Device
@@ -608,6 +608,10 @@ namespace Waveshare.Common
                 for (var x = 0; x < maxX; x++)
                 {
                     pixel.SetBGR(inputLine[xPos++], inputLine[xPos++], inputLine[xPos++], IsPalletMonochrome);
+                    if (ColorBytesPerPixel > 3)
+                    {
+                        xPos += ColorBytesPerPixel - 3;
+                    }
                     DisplayWriter.Write(GetColorIndex(pixel));
                 }
 
@@ -666,6 +670,10 @@ namespace Waveshare.Common
                 for (var x = 0; x < maxX; x++)
                 {
                     pixel.SetBGR(inputLine[xPos++], inputLine[xPos++], inputLine[xPos++], IsPalletMonochrome);
+                    if (ColorBytesPerPixel > 3)
+                    {
+                        xPos += ColorBytesPerPixel - 3;
+                    }
                     data[x, currentLine] = pixel;
                 }
 

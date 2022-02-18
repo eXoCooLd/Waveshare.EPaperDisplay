@@ -27,16 +27,15 @@
 
 using Moq;
 using NUnit.Framework;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5_V2;
-using Waveshare.Image.Bitmap;
+using Waveshare.Image.SkBitmap;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
@@ -283,7 +282,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
@@ -311,7 +310,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
 
             m_DataBuffer.Clear();
 
-            var bitmapEPaperDisplay = new BitmapLoader(result);
+            var bitmapEPaperDisplay = new SKBitmapLoader(result);
             bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
@@ -397,7 +396,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         /// <param name="image">Bitmap image to convert</param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        internal static byte[] SendBitmapToDevice(Bitmap image, int width, int height)
+        internal static byte[] SendBitmapToDevice(SKBitmap image, int width, int height)
         {
             var outputArray = new List<Byte>();
 
@@ -405,38 +404,31 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
             int maxX = Math.Min(width, image.Width);
             int maxY = Math.Min(height, image.Height);
 
-            var inputData = image.LockBits(new Rectangle(0, 0, maxX, maxY), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            try
+            var colorBytesPerPixel = image.BytesPerPixel;
+            var stride = maxX * image.BytesPerPixel;
+            var deviceLineWithInByte = image.Width * colorBytesPerPixel;
+            var deviceStep = colorBytesPerPixel * pixelPerByte;
+
+            IntPtr scanLine = image.GetPixels();
+            byte[] line = new byte[stride];
+
+            for (var y = 0; y < height; y++)
             {
-                var colorBytesPerPixel = inputData.Stride / inputData.Width;
-                var deviceLineWithInByte = inputData.Width * colorBytesPerPixel;
-                var deviceStep = colorBytesPerPixel * pixelPerByte;
+                var outputLine = CloneWhiteScanLine(width/pixelPerByte);
 
-                IntPtr scanLine = inputData.Scan0;
-                byte[] line = new byte[inputData.Stride];
-
-                for (var y = 0; y < height; y++)
+                if (y < maxY)
                 {
-                    var outputLine = CloneWhiteScanLine(width/pixelPerByte);
+                    Marshal.Copy(scanLine, line, 0, line.Length);
 
-                    if (y < maxY)
+                    for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
                     {
-                        Marshal.Copy(scanLine, line, 0, line.Length);
-
-                        for (var x = 0; x < deviceLineWithInByte; x += deviceStep)
-                        {
-                            outputLine[x / deviceStep] = GetDevicePixels(x, line);
-                        }
-
-                        scanLine += inputData.Stride;
+                        outputLine[x / deviceStep] = GetDevicePixels(x, line);
                     }
 
-                    outputArray.AddRange(outputLine);
+                    scanLine += stride;
                 }
-            }
-            finally
-            {
-                image.UnlockBits(inputData);
+
+                outputArray.AddRange(outputLine);
             }
 
             return outputArray.ToArray();
@@ -478,7 +470,7 @@ namespace Waveshare.Test.Devices.Epd7in5_V2
         /// <returns></returns>
         private static byte GetPixelFromArray(byte[] line, int xPosition, int pixel)
         {
-            var pixelWidth = 3 * pixel;
+            var pixelWidth = 4 * pixel;
 
             var colorB = xPosition + pixelWidth;
             var colorG = xPosition + ++pixelWidth;
