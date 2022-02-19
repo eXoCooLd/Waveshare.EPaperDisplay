@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2021 Andre Wehrli
+// Copyright(c) 2022 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,51 +23,56 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-namespace Waveshare.Common
+#region Usings
+
+#endregion Usings
+
+namespace Waveshare.Devices.Epd5in65F
 {
     /// <summary>
-    /// Colors as ByteArrays
+    /// Byte values for the supported hardware colors
     /// </summary>
-    internal class ByteColors
+    // ReSharper disable once InconsistentNaming
+    internal class Epd5in65fColors
     {
         /// <summary>
-        /// Color White as ByteColor
+        /// Byte value for color black
         /// </summary>
-        public static readonly ByteColor White = new ByteColor(255, 255, 255);
+        public const byte Black = 0x00;
 
         /// <summary>
-        /// Color Gray as ByteColor
+        /// Byte value for color white
         /// </summary>
-        public static readonly ByteColor Gray = new ByteColor(128, 128, 128);
+        public const byte White = 0x01;
 
         /// <summary>
-        /// Color Black as ByteColor
+        /// Byte value for color green
         /// </summary>
-        public static readonly ByteColor Black = new ByteColor(0, 0, 0);
+        public const byte Green = 0x02;
 
         /// <summary>
-        /// Color Red as ByteColor
+        /// Byte value for color blue
         /// </summary>
-        public static readonly ByteColor Red = new ByteColor(255, 0, 0);
+        public const byte Blue = 0x03;
 
         /// <summary>
-        /// Color Green as ByteColor
+        /// Byte value for color red
         /// </summary>
-        public static readonly ByteColor Green = new ByteColor(0, 255, 0);
+        public const byte Red = 0x04;
 
         /// <summary>
-        /// Color Blue as ByteColor
+        /// Byte value for color yellow
         /// </summary>
-        public static readonly ByteColor Blue = new ByteColor(0, 0, 255);
+        public const byte Yellow = 0x05;
 
         /// <summary>
-        /// Color Yellow as ByteColor
+        /// Byte value for color orange
         /// </summary>
-        public static readonly ByteColor Yellow = new ByteColor(255, 255, 0);
+        public const byte Orange = 0x06;
 
         /// <summary>
-        /// Color Orange as ByteColor
+        /// Byte value for clear color
         /// </summary>
-        public static readonly ByteColor Orange = new ByteColor(255, 165, 0);
+        public const byte Clean = 0x07;
     }
 }

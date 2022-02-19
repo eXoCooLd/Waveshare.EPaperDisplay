@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="like_a_sir_600x448.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="like_a_sir_640x384.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

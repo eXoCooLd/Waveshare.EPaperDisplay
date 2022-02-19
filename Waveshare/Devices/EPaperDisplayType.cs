@@ -54,6 +54,13 @@ namespace Waveshare.Devices
         /// Display Resolution: 800*480
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        WaveShare7In5b_V2
+        WaveShare7In5b_V2,
+        /// <summary>
+        /// Type: Waveshare 5.65inch e-Paper (F)
+        /// Color: Black, White, Green, Blue, Red, Yellow and Orange
+        /// Display Resolution: 600*448 
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        WaveShare5In65f
     }
 }
