@@ -411,8 +411,10 @@ namespace Waveshare.Common
 
             for (var i = 1; i < SupportedByteColors.Length; i++)
             {
-                var distance = GetColorDistance(color, SupportedByteColors[i]);
-                if (distance <= minDistance)
+                var monochrome = (color.R == color.G && color.G == color.B);
+                var deviceColor = SupportedByteColors[i];
+                var distance = GetColorDistance(color, deviceColor);
+                if (distance <= minDistance && deviceColor.IsMonochrome == monochrome)
                 {
                     minDistance = distance;
                     bestIndex = i;

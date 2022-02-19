@@ -28,7 +28,7 @@
 using System;
 using Waveshare.Common;
 using Waveshare.Devices;
-using Waveshare.Devices.Epd5in65f;
+using Waveshare.Devices.Epd5in65F;
 using Waveshare.Devices.Epd7in5_V2;
 using Waveshare.Devices.Epd7in5b_V2;
 using Waveshare.Devices.Epd7in5bc;

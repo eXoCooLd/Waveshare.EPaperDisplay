@@ -23,7 +23,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 #endregion Copyright
 
-namespace Waveshare.Devices.Epd5in65f
+namespace Waveshare.Devices.Epd5in65F
 {
     /// <summary>
     /// E-Paper Commands from the Specification

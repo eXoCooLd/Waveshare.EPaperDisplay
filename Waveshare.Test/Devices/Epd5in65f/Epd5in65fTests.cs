@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2019 Andre Wehrli
+// Copyright(c) 2022 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,18 +33,19 @@ using System.Collections.Generic;
 using System.Device.Gpio;
 using System.IO;
 using System.Linq;
-using Waveshare.Devices.Epd7in5bc;
+using Waveshare.Common;
+using Waveshare.Devices.Epd5in65F;
 using Waveshare.Image;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Test.Devices.Epd7in5bc
+namespace Waveshare.Test.Devices.Epd5in65F
 {
     /// <summary>
-    /// All UnitTests for the Epd7In5BcTests Device
+    /// All UnitTests for the Epd5in65f Device
     /// </summary>
-    public class Epd7In5BcTests
+    public class Epd5in65fTests
     {
 
         //########################################################################################
@@ -81,21 +82,21 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void ConstructorTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
         }
 
         [Test]
         public void DisposeNoHardwareTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
         }
 
         [Test]
         public void DoubleDisposeTest()
         {
-            var result = new Epd7In5Bc();
+            var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
             result.Dispose();
             result.Dispose();
@@ -104,7 +105,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void FinalizerTest()
         {
-            var result = new Epd7In5Bc();
+            var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             Assert.NotNull(result, "Object should not be null");
@@ -121,7 +122,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void FinalizerNoHardwareTest()
         {
-            var result = new Epd7In5Bc();
+            var result = new Epd5in65f();
 
             Assert.NotNull(result, "Object should not be null");
 
@@ -137,7 +138,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void PowerOnTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -146,8 +147,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             var validBuffer = new List<byte>
             {
-                (byte)Epd7In5BcCommands.PowerOn,
-                (byte)Epd7In5BcCommands.GetStatus
+                (byte)Epd5in65fCommands.PowerOn,
+                (byte)Epd5in65fCommands.GetStatus
             };
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -156,7 +157,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void PowerOffTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -165,8 +166,8 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             var validBuffer = new List<byte>
             {
-                (byte)Epd7In5BcCommands.PowerOff,
-                (byte)Epd7In5BcCommands.GetStatus
+                (byte)Epd5in65fCommands.PowerOff,
+                (byte)Epd5in65fCommands.GetStatus
             };
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -174,7 +175,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void SleepTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -183,9 +184,9 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             var validBuffer = new List<byte>
             {
-                (byte)Epd7In5BcCommands.PowerOff,
-                (byte)Epd7In5BcCommands.GetStatus,
-                (byte)Epd7In5BcCommands.DeepSleep,
+                (byte)Epd5in65fCommands.PowerOff,
+                (byte)Epd5in65fCommands.GetStatus,
+                (byte)Epd5in65fCommands.DeepSleep,
                 0xA5
             };
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
@@ -194,7 +195,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void ClearTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -204,23 +205,23 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             const int pixelPerByte = 2;
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
-            const byte white = 0x03;
+            const byte white = Epd5in65fColors.White;
             var twoWhitePixel = result.MergePixelDataInByte(white, white);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5BcCommands.DataStartTransmission1
+                (byte) Epd5in65fCommands.DataStartTransmission1
             };
 
             for (int i = 0; i < displayBytes; i++)
             {
                 validBuffer.Add(twoWhitePixel);
             }
-            validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
-            validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
-            validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DataStop);
+            validBuffer.Add((byte)Epd5in65fCommands.PowerOn);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DisplayRefresh);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -228,7 +229,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void ClearBlackTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -238,23 +239,23 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             const int pixelPerByte = 2;
             var displayBytes = result.Width / pixelPerByte * result.Height;
 
-            const byte black = 0x00;
+            const byte black = Epd5in65fColors.Black;
             var twoBlackPixel = result.MergePixelDataInByte(black, black);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5BcCommands.DataStartTransmission1
+                (byte) Epd5in65fCommands.DataStartTransmission1
             };
 
             for (int i = 0; i < displayBytes; i++)
             {
                 validBuffer.Add(twoBlackPixel);
             }
-            validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
-            validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
-            validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DataStop);
+            validBuffer.Add((byte)Epd5in65fCommands.PowerOn);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DisplayRefresh);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
         }
@@ -262,24 +263,24 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void DisplayImageTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             var image = CommonTestData.CreateSampleBitmap(result.Width, result.Height);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5BcCommands.DataStartTransmission1
+                (byte) Epd5in65fCommands.DataStartTransmission1
             };
 
             m_DataBuffer.Clear();
 
             validBuffer.AddRange(BitmapToData(image, result.Width, result.Height));
-            validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
-            validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
-            validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DataStop);
+            validBuffer.Add((byte)Epd5in65fCommands.PowerOn);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DisplayRefresh);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
 
             m_DataBuffer.Clear();
 
@@ -293,29 +294,29 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void DisplayImageSmallTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             var image = CommonTestData.CreateSampleBitmap(result.Width / 2, result.Height / 2);
 
             var validBuffer = new List<byte>
             {
-                (byte) Epd7In5BcCommands.DataStartTransmission1
+                (byte) Epd5in65fCommands.DataStartTransmission1
             };
 
             m_DataBuffer.Clear();
 
             validBuffer.AddRange(BitmapToData(image, result.Width, result.Height));
-            validBuffer.Add((byte)Epd7In5BcCommands.DataStop);
-            validBuffer.Add((byte)Epd7In5BcCommands.PowerOn);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
-            validBuffer.Add((byte)Epd7In5BcCommands.DisplayRefresh);
-            validBuffer.Add((byte)Epd7In5BcCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DataStop);
+            validBuffer.Add((byte)Epd5in65fCommands.PowerOn);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
+            validBuffer.Add((byte)Epd5in65fCommands.DisplayRefresh);
+            validBuffer.Add((byte)Epd5in65fCommands.GetStatus);
 
             m_DataBuffer.Clear();
 
             var bitmapEPaperDisplay = new SKBitmapLoader(result);
-            bitmapEPaperDisplay.DisplayImage(image, false);
+            bitmapEPaperDisplay.DisplayImage(image);
 
             Assert.AreEqual(validBuffer.Count, m_DataBuffer.Count, "Data Length is wrong");
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
@@ -324,7 +325,7 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void WakeUpTest()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
             result.Initialize(m_EPaperDisplayHardwareMock.Object);
 
             m_DataBuffer.Clear();
@@ -333,33 +334,35 @@ namespace Waveshare.Test.Devices.Epd7in5bc
 
             var validBuffer = new List<byte>
             {
-                (byte)Epd7In5BcCommands.PowerSetting,
+                (byte)Epd5in65fCommands.PanelSetting,
+                0xEF,
+                0x08,
+                (byte)Epd5in65fCommands.PowerSetting,
                 0x37,
                 0x00,
-                (byte)Epd7In5BcCommands.PanelSetting,
-                0xCF,
-                0x08,
-                (byte)Epd7In5BcCommands.PllControl,
-                0x3A,
-                (byte)Epd7In5BcCommands.VcmDcSetting,
-                0x28,
-                (byte)Epd7In5BcCommands.BoosterSoftStart,
-                0xc7,
-                0xcc,
-                0x15,
-                (byte)Epd7In5BcCommands.VcomAndDataIntervalSetting,
-                0x77,
-                (byte)Epd7In5BcCommands.TconSetting,
-                0x22,
-                (byte)Epd7In5BcCommands.SpiFlashControl,
+                0x23,
+                0x23,
+                (byte)Epd5in65fCommands.PowerOffSequenceSetting,
                 0x00,
-                (byte)Epd7In5BcCommands.TconResolution,
-                (byte)(result.Width >> 8), // source 640
-                (byte)(result.Width & 0xff),
-                (byte)(result.Height >> 8), // gate 384
-                (byte)(result.Height & 0xff),
-                (byte)Epd7In5BcCommands.FlashMode,
-                0x03
+                (byte)Epd5in65fCommands.PowerOn,
+                0xC7,
+                0xC7,
+                0x1D,
+                (byte)Epd5in65fCommands.PllControl,
+                0x3C,
+                (byte)Epd5in65fCommands.TemperatureCalibration,
+                0x00,
+                (byte)Epd5in65fCommands.VcomAndDataIntervalSetting,
+                0x37,
+                (byte)Epd5in65fCommands.TconSetting,
+                0x22,
+                (byte)Epd5in65fCommands.TconResolution,
+                0x02,
+                0x58,
+                0x01,
+                0xC0,
+                (byte)Epd5in65fCommands.FlashMode,
+                0xAA,
             };
 
             Assert.IsTrue(m_DataBuffer.SequenceEqual(validBuffer), "Command Data Sequence is wrong");
@@ -368,13 +371,13 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         [Test]
         public void TestMergePixelDataInByte()
         {
-            using var result = new Epd7In5Bc();
+            using var result = new Epd5in65f();
 
             var random = new Random();
             for (int i = 0; i < 200; i++)
             {
-                var b1 = (byte) random.Next(0, 0x0F);
-                var b2 = (byte) random.Next(0, 0x0F);
+                var b1 = (byte)random.Next(0, 0x0F);
+                var b2 = (byte)random.Next(0, 0x0F);
 
                 var oldResult = MergePixelDataInByte(b1, b2);
                 var newResult = result.MergePixelDataInByte(b1, b2);
@@ -459,27 +462,47 @@ namespace Waveshare.Test.Devices.Epd7in5bc
         /// <returns>Pixel converted to specific byte value for the hardware</returns>
         private static byte ColorToByte(SKColor pixel)
         {
-            const byte black = 0x00;
-            const byte gray = 0x02;
-            const byte white = 0x03;
-            const byte red = 0x04;
-
             if (IsMonochrom(pixel))
             {
-                if (pixel.Red <= 85)
-                {
-                    return black;
-                }
-
-                if (pixel.Red <= 170)
-                {
-                    return gray;
-                }
-
-                return white;
+                return pixel.Red <= 85 ? Epd5in65fColors.Black : Epd5in65fColors.White;
             }
 
-            return pixel.Red >= 64 ? red : black;
+            if (IsColor(pixel, ByteColors.Black))
+            {
+                return Epd5in65fColors.Black;
+            }
+
+            if (IsColor(pixel, ByteColors.White))
+            {
+                return Epd5in65fColors.White;
+            }
+
+            if (IsColor(pixel, ByteColors.Green))
+            {
+                return Epd5in65fColors.Green;
+            }
+
+            if (IsColor(pixel, ByteColors.Blue))
+            {
+                return Epd5in65fColors.Blue;
+            }
+
+            if (IsColor(pixel, ByteColors.Red))
+            {
+                return Epd5in65fColors.Red;
+            }
+
+            if (IsColor(pixel, ByteColors.Yellow))
+            {
+                return Epd5in65fColors.Yellow;
+            }
+
+            if (IsColor(pixel, ByteColors.Orange))
+            {
+                return Epd5in65fColors.Orange;
+            }
+
+            return Epd5in65fColors.Clean;
         }
 
         /// <summary>
@@ -492,6 +515,16 @@ namespace Waveshare.Test.Devices.Epd7in5bc
             return pixel.Red == pixel.Green && pixel.Green == pixel.Blue;
         }
 
+        /// <summary>
+        /// Check if the Pixel is the Color
+        /// </summary>
+        /// <param name="pixel"></param>
+        /// <param name="rgb"></param>
+        /// <returns></returns>
+        private static bool IsColor(SKColor pixel, ByteColor rgb)
+        {
+            return pixel.Red == rgb.R && pixel.Green == rgb.G && pixel.Blue == rgb.B;
+        }
         #endregion Old working Implementation
 
         //########################################################################################

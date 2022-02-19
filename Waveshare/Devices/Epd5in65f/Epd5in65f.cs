@@ -31,7 +31,7 @@ using Waveshare.Devices.Epd5in65F;
 
 #endregion Usings
 
-namespace Waveshare.Devices.Epd5in65f
+namespace Waveshare.Devices.Epd5in65F
 {
     /// <summary>
     /// Type: Waveshare 5.65inch e-Paper (F)
@@ -183,10 +183,6 @@ namespace Waveshare.Devices.Epd5in65f
 
             SendCommand(Epd5in65fCommands.FlashMode);
             SendData(0xAA);
-
-            Thread.Sleep(100);
-            SendCommand(Epd5in65fCommands.VcomAndDataIntervalSetting);
-            SendData(0x37);
         }
 
         /// <summary>

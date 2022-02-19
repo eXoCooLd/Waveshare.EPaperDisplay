@@ -51,7 +51,7 @@ namespace Waveshare.Test.Devices
         /// <returns></returns>
         public static SKBitmap CreateSampleBitmap(int width, int height)
         {
-            var image = new SKBitmap(new SKImageInfo(width, height));
+            var image = new SKBitmap(new SkiaSharp.SKImageInfo(width, height, SKColorType.Bgra8888));
 
             for (int y = 0; y < image.Height; y++)
             {

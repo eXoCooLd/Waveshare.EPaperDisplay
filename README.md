@@ -5,6 +5,7 @@ Currently supported Models:
 - Waveshare 7.5inch e-Paper (B)
 - Waveshare 7.5inch e-Paper V2
 - Waveshare 7.5inch e-Paper V2 (B)
+- Waveshare 5.65inch e-Paper (F)
 
 ## Based on:
 
@@ -12,6 +13,7 @@ Specification from:
 - https://www.waveshare.com/w/upload/2/29/7.5inch_e-paper-b-Specification.pdf
 - https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 - https://www.waveshare.com/w/upload/4/44/7.5inch_e-Paper_B_V2_Specification.pdf
+- https://www.waveshare.com/w/upload/7/7a/5.65inch_e-Paper_(F)_Sepecification.pdf
 
 C Example Code from:
 https://github.com/waveshare/e-Paper/tree/master/RaspberryPi_JetsonNano/c

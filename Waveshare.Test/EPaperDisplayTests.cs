@@ -79,6 +79,17 @@ namespace Waveshare.Test
         }
 
         [Test]
+        public void CreateWaveShareEpd5in65fTest()
+        {
+            var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
+            ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
+            EPaperDisplayRaw.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
+
+            using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare5In65f);
+            Assert.NotNull(result, $"Enum Value {EPaperDisplayType.WaveShare5In65f} should return a object");
+        }
+
+        [Test]
         public void GetEPaperDisplayHardwareTest()
         {
             var lazyHardware = EPaperDisplayRaw.EPaperDisplayHardware;
