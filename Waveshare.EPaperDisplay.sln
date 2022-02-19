@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.181
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Waveshare.Example", "Waveshare.Example\Waveshare.Example.csproj", "{4571440C-2E3E-4DA3-BE29-FAA1A7FE906D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waveshare", "Waveshare\Waveshare.csproj", "{790C9966-8020-4D18-B457-2C004F73FA5E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Waveshare", "Waveshare\Waveshare.csproj", "{790C9966-8020-4D18-B457-2C004F73FA5E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waveshare.Test", "Waveshare.Test\Waveshare.Test.csproj", "{CC7FCF15-9AED-4909-AB04-BA166FB60453}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Waveshare.Test", "Waveshare.Test\Waveshare.Test.csproj", "{CC7FCF15-9AED-4909-AB04-BA166FB60453}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waveshare.EPaperDisplay.Bitmap", "Waveshare.EPaperDisplay.Bitmap\Waveshare.EPaperDisplay.Bitmap.csproj", "{693FBAE8-E3A1-498D-97BE-EB2147C27A0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waveshare.EPaperDisplay.SkiaSharp", "Waveshare.EPaperDisplay.SkiaSharp\Waveshare.EPaperDisplay.SkiaSharp.csproj", "{362453A9-DD85-4E4C-84F4-FE1EE0BE8B39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{CC7FCF15-9AED-4909-AB04-BA166FB60453}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC7FCF15-9AED-4909-AB04-BA166FB60453}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC7FCF15-9AED-4909-AB04-BA166FB60453}.Release|Any CPU.Build.0 = Release|Any CPU
+		{693FBAE8-E3A1-498D-97BE-EB2147C27A0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{693FBAE8-E3A1-498D-97BE-EB2147C27A0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{693FBAE8-E3A1-498D-97BE-EB2147C27A0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{693FBAE8-E3A1-498D-97BE-EB2147C27A0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{362453A9-DD85-4E4C-84F4-FE1EE0BE8B39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{362453A9-DD85-4E4C-84F4-FE1EE0BE8B39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{362453A9-DD85-4E4C-84F4-FE1EE0BE8B39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{362453A9-DD85-4E4C-84F4-FE1EE0BE8B39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

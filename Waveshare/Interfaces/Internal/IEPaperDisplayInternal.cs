@@ -72,7 +72,6 @@ namespace Waveshare.Interfaces.Internal
         /// <returns>Color index of closest supported color</returns>
         int GetColorIndex(ByteColor color);
 
-
         /// <summary>
         /// Get a colored scan line on the device
         /// </summary>

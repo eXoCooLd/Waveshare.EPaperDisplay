@@ -31,5 +31,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Waveshare.Test")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
-[assembly: InternalsVisibleTo("Waveshare.EPaperDisplay.Bitmap")]
-[assembly: InternalsVisibleTo("Waveshare.EPaperDisplay.SkiaSharp")]
+

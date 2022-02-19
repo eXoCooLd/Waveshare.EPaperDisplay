@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2021 Andre Wehrli
+// Copyright(c) 2022 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,18 +26,17 @@
 #region Usings
 
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Image.Bitmap
+namespace Waveshare.Image
 {
     /// <summary>
-    /// RAW Image Wrapper of a Bitmap
+    /// Wrapper for a SKBitmap into a RAW Image for the E-Paper Display
     /// </summary>
-    internal sealed class BitmapRawImage : IRawImage
+    // ReSharper disable once InconsistentNaming
+    internal class SKBitmapRawImage : IRawImage
     {
 
         //########################################################################################
@@ -50,34 +49,29 @@ namespace Waveshare.Image.Bitmap
         private IntPtr m_ScanLine;
 
         /// <summary>
-        /// The Bitmap used for the ScanLine
+        /// The SKBitmap used for the ScanLine
         /// </summary>
-        private System.Drawing.Bitmap Bitmap { get; set; }
-
-        /// <summary>
-        /// The raw Bitmap Data
-        /// </summary>
-        private BitmapData BitmapData { get; set; }
+        private SkiaSharp.SKBitmap? Bitmap { get; set; }
 
         /// <summary>
         /// Width of the Image or Device Width
         /// </summary>
-        public int Width => Bitmap.Width;
+        public int Width => Bitmap != null ? Bitmap.Width : 0;
 
         /// <summary>
         /// Height of the Image or Device Height
         /// </summary>
-        public int Height => Bitmap.Height;
+        public int Height => Bitmap != null ? Bitmap.Height : 0;
 
         /// <summary>
         /// Used Bytes per Pixel
         /// </summary>
-        public int BytesPerPixel { get; }
+        public int BytesPerPixel => Bitmap != null ? Bitmap.BytesPerPixel : 0;
 
         /// <summary>
         /// Length of a ScanLine in Bytes
         /// </summary>
-        public int Stride => Bitmap.Width * BytesPerPixel;
+        public int Stride => Bitmap != null ? (Bitmap.Width * Bitmap.BytesPerPixel) : 0;
 
         /// <summary>
         /// IntPointer to the Byte Array of the Image
@@ -86,9 +80,9 @@ namespace Waveshare.Image.Bitmap
         {
             get
             {
-                if (m_ScanLine == IntPtr.Zero && BitmapData != null)
+                if (m_ScanLine == IntPtr.Zero && Bitmap != null)
                 {
-                    m_ScanLine = BitmapData.Scan0;
+                    m_ScanLine = Bitmap.GetPixels();
                 }
 
                 return m_ScanLine;
@@ -105,30 +99,9 @@ namespace Waveshare.Image.Bitmap
         /// Constructor with the SKBitmap
         /// </summary>
         /// <param name="bitmap"></param>
-        /// <param name="maxWidth"></param>
-        /// <param name="maxHeight"></param>
-        public BitmapRawImage(System.Drawing.Bitmap bitmap, int maxWidth, int maxHeight)
+        public SKBitmapRawImage(SkiaSharp.SKBitmap bitmap)
         {
             Bitmap = bitmap;
-            BitmapData = bitmap.LockBits(new Rectangle(0, 0, maxWidth, maxHeight), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
-            BytesPerPixel = BitmapData.Stride / bitmap.Width;
-        }
-
-        /// <summary>
-        /// Dispose
-        /// </summary>
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Bitmap?.UnlockBits(BitmapData);
-                BitmapData = null;
-                m_ScanLine = IntPtr.Zero;
-
-                //Do not dispose the Bitmap, because we did not create it.
-                //We do not know if it is used after the display refresh
-                Bitmap = null;
-            }
         }
 
         /// <summary>
@@ -136,14 +109,9 @@ namespace Waveshare.Image.Bitmap
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Bitmap?.Dispose();
+            Bitmap = null;
         }
-
-        /// <summary>
-        /// Finalizer
-        /// </summary>
-        ~BitmapRawImage() => Dispose(false);
 
         #endregion Constructor / Dispose / Finalizer
 

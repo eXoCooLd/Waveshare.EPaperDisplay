@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2022 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,94 +26,52 @@
 #region Usings
 
 using System;
+using Waveshare.Image;
+using Waveshare.Interfaces;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Image.SKBitmap
+namespace Waveshare.Image
 {
     /// <summary>
-    /// Wrapper for a SKBitmap into a RAW Image for the E-Paper Display
+    /// System.Drawing.Bitmap Image Loader
     /// </summary>
-    // ReSharper disable once InconsistentNaming
-    internal class SKBitmapRawImage : IRawImage
+    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
     {
-
-        //########################################################################################
-
-        #region Properties
-
-        /// <summary>
-        /// IntPointer to the Byte Array of the Image
-        /// </summary>
-        private IntPtr m_ScanLine;
-
-        /// <summary>
-        /// The SKBitmap used for the ScanLine
-        /// </summary>
-        private SkiaSharp.SKBitmap Bitmap { get; set; }
-
-        /// <summary>
-        /// Width of the Image or Device Width
-        /// </summary>
-        public int Width => Bitmap.Width;
-
-        /// <summary>
-        /// Height of the Image or Device Height
-        /// </summary>
-        public int Height => Bitmap.Height;
-
-        /// <summary>
-        /// Used Bytes per Pixel
-        /// </summary>
-        public int BytesPerPixel => Bitmap.BytesPerPixel;
-
-        /// <summary>
-        /// Length of a ScanLine in Bytes
-        /// </summary>
-        public int Stride => Bitmap.Width * Bitmap.BytesPerPixel;
-
-        /// <summary>
-        /// IntPointer to the Byte Array of the Image
-        /// </summary>
-        public IntPtr ScanLine
-        {
-            get
-            {
-                if (m_ScanLine == IntPtr.Zero)
-                {
-                    m_ScanLine = Bitmap.GetPixels();
-                }
-
-                return m_ScanLine;
-            }
-        }
-
-        #endregion Properties
 
         //########################################################################################
 
         #region Constructor / Dispose / Finalizer
 
         /// <summary>
-        /// Constructor with the SKBitmap
+        /// Constructor
         /// </summary>
-        /// <param name="bitmap"></param>
-        public SKBitmapRawImage(SkiaSharp.SKBitmap bitmap)
+        /// <param name="ePaperDisplay"></param>
+        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
         {
-            Bitmap = bitmap;
-        }
-
-        /// <summary>
-        /// Dispose
-        /// </summary>
-        public void Dispose()
-        {
-            Bitmap?.Dispose();
-            Bitmap = null;
         }
 
         #endregion Constructor / Dispose / Finalizer
+
+        //########################################################################################
+
+        #region Protected Methods
+
+        /// <summary>
+        /// Load the System.Drawing.Bitmap into a RawImage
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
+        {
+            var maxWidth = Math.Min(Width, image.Width);
+            var maxHeight = Math.Min(Height, image.Height);
+
+            return new BitmapRawImage(image, maxWidth, maxHeight);
+        }
+
+        #endregion Protected Methods
 
         //########################################################################################
 

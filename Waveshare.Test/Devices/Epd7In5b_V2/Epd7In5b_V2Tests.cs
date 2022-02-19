@@ -7,14 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Waveshare.Devices.Epd7in5b_V2;
-using Waveshare.Image.Bitmap;
-using Waveshare.Image.SkBitmap;
+using Waveshare.Image;
 using Waveshare.Interfaces.Internal;
 
 #endregion Usings

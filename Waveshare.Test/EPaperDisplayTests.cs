@@ -50,7 +50,7 @@ namespace Waveshare.Test
         {
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
             ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
-            EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
+            EPaperDisplayRaw.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
             using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5Bc);
             Assert.NotNull(result, $"Enum Value {EPaperDisplayType.WaveShare7In5Bc} should return a object");
@@ -61,7 +61,7 @@ namespace Waveshare.Test
         {
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
             ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
-            EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
+            EPaperDisplayRaw.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
             using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5_V2);
             Assert.NotNull(result, $"Enum Value {EPaperDisplayType.WaveShare7In5_V2} should return a object");
@@ -72,7 +72,7 @@ namespace Waveshare.Test
         {
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
             ePaperDisplayHardwareMock.SetupGet(e => e.BusyPin).Returns(PinValue.High);
-            EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
+            EPaperDisplayRaw.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
             using var result = EPaperDisplay.Create(EPaperDisplayType.WaveShare7In5b_V2);
             Assert.NotNull(result, $"Enum Value {EPaperDisplayType.WaveShare7In5b_V2} should return a object");
@@ -81,16 +81,16 @@ namespace Waveshare.Test
         [Test]
         public void GetEPaperDisplayHardwareTest()
         {
-            var lazyHardware = EPaperDisplay.EPaperDisplayHardware;
+            var lazyHardware = EPaperDisplayRaw.EPaperDisplayHardware;
             Assert.NotNull(lazyHardware);
 
             using var result = lazyHardware.Value;
             Assert.NotNull(result, "EPaperDisplayHardware should not return null");
 
             var ePaperDisplayHardwareMock = new Mock<IEPaperDisplayHardware>();
-            EPaperDisplay.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
+            EPaperDisplayRaw.EPaperDisplayHardware = new Lazy<IEPaperDisplayHardware>(() => ePaperDisplayHardwareMock.Object);
 
-            using var result2 = EPaperDisplay.EPaperDisplayHardware.Value;
+            using var result2 = EPaperDisplayRaw.EPaperDisplayHardware.Value;
             Assert.NotNull(result2, "EPaperDisplayHardware should not return null");
         }
     }

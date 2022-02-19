@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Waveshare\Waveshare.csproj" />
+    <ProjectReference Include="..\Waveshare.EPaperDisplay.SkiaSharp\Waveshare.EPaperDisplay.SkiaSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

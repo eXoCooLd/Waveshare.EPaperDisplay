@@ -25,52 +25,36 @@
 
 #region Usings
 
-using System;
+using Waveshare.Devices;
+using Waveshare.Image;
 using Waveshare.Interfaces;
-using Waveshare.Interfaces.Internal;
 
 #endregion Usings
 
-namespace Waveshare.Image.Bitmap
+namespace Waveshare
 {
     /// <summary>
-    /// System.Drawing.Bitmap Image Loader
+    /// E-Paper Display Factory
     /// </summary>
-    internal class BitmapLoader : EPaperImageBase<System.Drawing.Bitmap>, IEPaperDisplayBitmap
+    public static class EPaperDisplay
     {
 
         //########################################################################################
 
-        #region Constructor / Dispose / Finalizer
+        #region Public Methods
 
         /// <summary>
-        /// Constructor
+        /// Create a instance of a E-Paper Display for System.Drawing.Bitmap
         /// </summary>
-        /// <param name="ePaperDisplay"></param>
-        public BitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
-        {
-        }
-
-        #endregion Constructor / Dispose / Finalizer
-
-        //########################################################################################
-
-        #region Protected Methods
-
-        /// <summary>
-        /// Load the System.Drawing.Bitmap into a RawImage
-        /// </summary>
-        /// <param name="image"></param>
+        /// <param name="displayType"></param>
         /// <returns></returns>
-        protected override IRawImage LoadImage(System.Drawing.Bitmap image)
+        public static IEPaperDisplayBitmap? Create(EPaperDisplayType displayType)
         {
-            var maxWidth = Math.Min(Width, image.Width);
-            var maxHeight = Math.Min(Height, image.Height);
-
-            return new BitmapRawImage(image, maxWidth, maxHeight);
+            var ePaperDisplay = EPaperDisplayRaw.CreateEPaperDisplay(displayType);
+            return ePaperDisplay != null ? new BitmapLoader(ePaperDisplay) : null;
         }
 
-        #endregion Protected Methods
+        #endregion Public Methods
 
         //########################################################################################
 

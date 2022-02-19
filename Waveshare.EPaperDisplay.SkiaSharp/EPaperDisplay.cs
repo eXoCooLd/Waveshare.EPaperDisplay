@@ -1,7 +1,7 @@
 ﻿#region Copyright
 // --------------------------------------------------------------------------------------------------------------------
 // MIT License
-// Copyright(c) 2022 Andre Wehrli
+// Copyright(c) 2021 Andre Wehrli
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,53 +25,38 @@
 
 #region Usings
 
-using System;
-using Waveshare.Image.SKBitmap;
+using Waveshare.Devices;
 using Waveshare.Interfaces;
-using Waveshare.Interfaces.Internal;
+using Waveshare.Image;
 
 #endregion Usings
 
-namespace Waveshare.Image.SkBitmap
+namespace Waveshare
 {
-    internal class SKBitmapLoader : EPaperImageBase<SkiaSharp.SKBitmap>, IEPaperDisplaySKBitmap
+    /// <summary>
+    /// E-Paper Display Factory
+    /// </summary>
+    public static class EPaperDisplay
     {
-        //########################################################################################
-
-        #region Constructor / Dispose / Finalizer
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="ePaperDisplay"></param>
-        public SKBitmapLoader(IEPaperDisplayInternal ePaperDisplay) : base(ePaperDisplay)
-        {
-        }
-
-        #endregion Constructor / Dispose / Finalizer
 
         //########################################################################################
 
-        #region Protected Methods
+        #region Public Methods
 
         /// <summary>
-        /// Load the SSKBitmap into a RawImage
+        /// Create a instance of a E-Paper Display for System.Drawing.Bitmap
         /// </summary>
-        /// <param name="image"></param>
+        /// <param name="displayType"></param>
         /// <returns></returns>
-        protected override IRawImage LoadImage(SkiaSharp.SKBitmap image)
+        public static IEPaperDisplaySKBitmap? Create(EPaperDisplayType displayType)
         {
-            var maxWith = Math.Min(Width, image.Width);
-            var maxHeight = Math.Min(Height, image.Height);
-
-            var subSet = new SkiaSharp.SKBitmap();
-            image.ExtractSubset(subSet, new SkiaSharp.SKRectI(0, 0, maxWith, maxHeight));
-
-            return new SKBitmapRawImage(image.Resize(new SkiaSharp.SKImageInfo(maxWith, maxHeight, SkiaSharp.SKColorType.Bgra8888), SkiaSharp.SKFilterQuality.High));
+            var ePaperDisplay = EPaperDisplayRaw.CreateEPaperDisplay(displayType);
+            return ePaperDisplay != null ? new SKBitmapLoader(ePaperDisplay) : null;
         }
 
-        #endregion Protected Methods
+        #endregion Public Methods
 
         //########################################################################################
+
     }
 }
